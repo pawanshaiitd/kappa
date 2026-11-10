@@ -1,0 +1,9 @@
+name: targeted_verifier_agent
+description: Executes targeted tests and validates patch correctness without full-repo sweeps.
+model: gemma-4-31b-it-qat-w4a16-ct
+instruction: !include ../prompts/verifier.md
+tools:
+  - run_command
+  - read_file
+  - get_status
+generate_content_config: !include ../configs/sampling.yaml

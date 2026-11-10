@@ -1,0 +1,127 @@
+{
+  "run_command": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string",
+        "description": "Shell command to execute in /workspace"
+      }
+    },
+    "required": [
+      "command"
+    ]
+  },
+  "read_file": {
+    "type": "object",
+    "properties": {
+      "filepath": {
+        "type": "string",
+        "description": "Path relative to /workspace"
+      },
+      "start_line": {
+        "type": "integer",
+        "description": "1-based start line"
+      },
+      "end_line": {
+        "type": "integer",
+        "description": "1-based end line"
+      }
+    },
+    "required": [
+      "filepath"
+    ]
+  },
+  "edit_file": {
+    "type": "object",
+    "properties": {
+      "filepath": {
+        "type": "string"
+      },
+      "old_string": {
+        "type": "string"
+      },
+      "new_string": {
+        "type": "string"
+      },
+      "allow_multiple": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "filepath",
+      "old_string",
+      "new_string"
+    ]
+  },
+  "write_file": {
+    "type": "object",
+    "properties": {
+      "filepath": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "filepath",
+      "content"
+    ]
+  },
+  "submit_patch": {
+    "type": "object",
+    "properties": {}
+  },
+  "get_status": {
+    "type": "object",
+    "properties": {}
+  },
+  "search_similar_code": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string"
+      },
+      "k": {
+        "type": "integer",
+        "default": 5
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "get_code_neighbors": {
+    "type": "object",
+    "properties": {
+      "node": {
+        "type": "string"
+      },
+      "edge_type": {
+        "type": "string"
+      },
+      "max_neighbors": {
+        "type": "integer",
+        "default": 50
+      }
+    },
+    "required": [
+      "node"
+    ]
+  },
+  "get_code_subgraph": {
+    "type": "object",
+    "properties": {
+      "nodes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "nodes"
+    ]
+  }
+}

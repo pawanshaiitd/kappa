@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentMemorySchema",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "task_repo": {
+      "type": "string"
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "PLANNING",
+              "EXECUTION",
+              "VERIFICATION"
+            ]
+          },
+          "finding": {
+            "type": "string"
+          },
+          "target_file": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phase",
+          "action"
+        ]
+      }
+    }
+  },
+  "required": [
+    "session_id",
+    "task_repo",
+    "decisions"
+  ]
+}

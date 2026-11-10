@@ -1,0 +1,33 @@
+name: mkpro_coordinator
+description: Master orchestrator and multi-agent coordinator for MKPRO SWE engineering.
+model: gemma-4-31b-it-qat-w4a16-ct
+adapter: main_lora
+instruction: !include prompts/system.md
+tools:
+  - run_command
+  - read_file
+  - edit_file
+  - write_file
+  - get_status
+  - submit_patch
+  - get_code_neighbors
+  - search_similar_code
+  - get_code_subgraph
+  - agent_tool:
+      config_path: sub_agents/code_analyzer.yaml
+      skip_summarization: true
+  - agent_tool:
+      config_path: sub_agents/architect_planner.yaml
+      skip_summarization: true
+  - agent_tool:
+      config_path: sub_agents/precision_editor.yaml
+      skip_summarization: true
+  - agent_tool:
+      config_path: sub_agents/targeted_verifier.yaml
+      skip_summarization: true
+skills:
+  - skills/repo_navigation
+  - skills/code_intelligence
+  - skills/precision_editing
+  - skills/test_verification
+generate_content_config: !include configs/sampling.yaml

@@ -1,0 +1,10 @@
+name: architect_planner_agent
+description: Plans surgical modifications, checks architectural contracts, and selects targeted tests.
+model: gemma-4-31b-it-qat-w4a16-ct
+instruction: !include ../prompts/planner.md
+tools:
+  - read_file
+  - search_similar_code
+  - get_code_neighbors
+  - get_status
+generate_content_config: !include ../configs/sampling.yaml

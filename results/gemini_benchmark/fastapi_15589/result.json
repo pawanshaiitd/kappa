@@ -1,0 +1,13 @@
+{
+  "instance_id": "fastapi_15589",
+  "repo": "fastapi/fastapi",
+  "turns_taken": 14,
+  "tool_calls_count": 14,
+  "patch_submitted": false,
+  "patch_size": 0,
+  "patch": "",
+  "verification": {
+    "resolved": false,
+    "error": "Empty agent patch"
+  }
+}

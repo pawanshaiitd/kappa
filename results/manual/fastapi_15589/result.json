@@ -1,0 +1,32 @@
+{
+  "turns": 6,
+  "tool_calls": 3,
+  "elapsed_seconds": 0.3,
+  "patch_submitted": true,
+  "end_reason": "submit_patch",
+  "nudges": 1,
+  "edits_landed": 0,
+  "first_edit_turn": null,
+  "tool_uses": {
+    "get_status": 1,
+    "run_command": 1,
+    "read_file": 1,
+    "edit_file": 1,
+    "submit_patch": 1
+  },
+  "tool_errors": {
+    "edit_file:FileEditError": 1
+  },
+  "failed_calls": [
+    {
+      "tool": "edit_file",
+      "error_type": "FileEditError",
+      "arg": "README.md",
+      "detail": "Could not find match for old_string in content across all 3 tiers."
+    }
+  ],
+  "instance_id": "fastapi_15589",
+  "repo": "fastapi/fastapi",
+  "patch_size": 0,
+  "failure_bucket": "no_edit_attempted"
+}

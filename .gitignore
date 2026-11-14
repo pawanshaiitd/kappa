@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Large benchmark data (~27 GB). Not in git; see README for how to restore.
+#   snapshots/   20 GB   repository tarballs, one per task
+#   embeddings/  446 MB  precomputed symbol embeddings (.npz)
+#   graphs/      403 MB  precomputed AST call graphs (.json)
+#   wheels/      27 MB   offline wheel cache for test environments
+# NOTE: gitignore does not support trailing comments - a pattern and a comment
+# must never share a line, or the comment becomes part of the pattern.
+# ---------------------------------------------------------------------------
+snapshots/
+embeddings/
+graphs/
+wheels/
+
+# Virtual environments (.venv_cache is 4.5 GB, rebuilt by --prebuild-envs)
+.venv/
+.venv_cache/
+venv/
+env/
+
+# Generated artifacts, all reproducible from a documented command
+submission.zip
+submission.parquet
+sandbox/
+*.egg-info/
+build/
+dist/
+
+# Python and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+*.swp

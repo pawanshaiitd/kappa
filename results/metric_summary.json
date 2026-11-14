@@ -1,0 +1,14 @@
+{
+  "total_tasks": 1,
+  "resolved_tasks": 1,
+  "resolution_rate": 1.0,
+  "elapsed_seconds": 2.826626750000287,
+  "task_results": [
+    {
+      "instance_id": "fastapi_15589",
+      "resolved": true,
+      "exit_code": 0,
+      "stdout": ".......                                                                  [100%]\n=============================== warnings summary ===============================\n../../../../../../../../Users/pawankumar.s/Documents/gemma-4-developer-agent/.venv/lib/python3.12/site-packages/starlette/testclient.py:53\n  /Users/pawankumar.s/Documents/gemma-4-developer-agent/.venv/lib/python3.12/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.f"
+    }
+  ]
+}

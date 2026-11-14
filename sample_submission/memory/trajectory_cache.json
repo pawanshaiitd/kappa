@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "distilled_lessons": [
+    {
+      "pattern_id": "P01_NON_UNIQUE_OLD_STRING",
+      "trigger": "FileEditError: Multiple matches found",
+      "remediation": "Re-read file with read_file for 5 lines of surrounding context, include function def or enclosing block in old_string."
+    },
+    {
+      "pattern_id": "P02_BARE_PYTEST_TIMEOUT",
+      "trigger": "TimeoutExceeded on pytest",
+      "remediation": "Never run pytest without explicit file path. Locate test via find tests -name '*test_*.py' and run single file."
+    },
+    {
+      "pattern_id": "P03_PROTECTED_TEST_TOUCH",
+      "trigger": "Edit in tests/ or test_*.py",
+      "remediation": "Immediately revert changes to test files. Solve root cause in source implementation under src/ or library package."
+    },
+    {
+      "pattern_id": "P04_EMPTY_PATCH_SUBMIT",
+      "trigger": "submit_patch returns patch_size: 0",
+      "remediation": "Do not submit patch without modifying files. Verify git diff before calling submit_patch."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# Per-task operational budgets for the swegemma harness (Stage 1 inference).
+# Rationale:
+#   max_tool_calls  - locate + read + edit + verify + recover needs ~25-40 calls;
+#                     70 leaves room for two correction attempts without inviting aimless search.
+#   max_time_minutes- wall clock is the real constraint for a large model on 4x L4.
+#   timeout_seconds - per-command cap; a targeted pytest run finishes well inside 180s,
+#                     and failing fast preserves the wall-clock budget.
+#   max_turns       - generous; the loop ends on submit_patch, budget exhaustion or 3 nudges.
+evaluation:
+  timeout_seconds: 180
+  max_tool_calls: 70
+  max_time_minutes: 60
+  max_turns: 60

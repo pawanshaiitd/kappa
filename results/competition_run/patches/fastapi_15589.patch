@@ -1,0 +1,19 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index 7c6558c69..b91876ac0 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -829,6 +829,14 @@ def request_params_to_args(
+ 
+     for key in received_params.keys():
+         if key not in processed_keys:
++            # If default_convert_underscores is True and it's a header,
++            # and the key contains an underscore, skip it.
++            if (
++                default_convert_underscores
++                and isinstance(received_params, Headers)
++                and "_" in key
++            ):
++                continue
+             if isinstance(received_params, (ImmutableMultiDict, Headers)):
+                 value = received_params.getlist(key)
+                 if isinstance(value, list) and (len(value) == 1):

@@ -730,8 +730,11 @@ class Sandbox:
         return env
 
     def _rewrite_paths(self, cmd: str) -> str:
-        cmd = cmd.replace("/workspace", str(self.ws))
-        return re.sub(r"(?<![\w./-])/tmp(?=/|\b)", str(self.tmp), cmd)
+        # One pass, so an expanded /workspace that itself lives under /tmp (Linux tempdirs) is
+        # never rewritten a second time by the /tmp rule.
+        ws, tmp = str(self.ws), str(self.tmp)
+        return re.sub(r"/workspace|(?<![\w./-])/tmp(?=/|\b)",
+                      lambda m: ws if m.group(0) == "/workspace" else tmp, cmd)
 
     def advance_clock(self, seconds: float) -> None:
         self.sim_clock += max(0.0, seconds)

@@ -353,3 +353,13 @@ def test_variant_can_drop_a_prompt_section(tmp_path):
     assert {a.model for a in sub.root.llm_agents()} == {"gemma-4-e4b-it-qat-w4a16-ct"}
     assert all(a.gen_cfg["thinking_config"]["thinking_budget"] == 0 for a in sub.root.llm_agents())
     assert "drop_section=Repo notes" in applied
+
+
+def test_rewrite_paths_when_workspace_lives_under_tmp():
+    """On Linux the task workspace is created under /tmp; /workspace must expand exactly once."""
+    class FakeSandbox:
+        ws = "/tmp/swegemma_x/workspace"
+        tmp = "/tmp/swegemma_x/tmp"
+
+    out = Sandbox._rewrite_paths(FakeSandbox(), "ls /workspace/pkg && echo hi > /tmp/a")
+    assert out == "ls /tmp/swegemma_x/workspace/pkg && echo hi > /tmp/swegemma_x/tmp/a"

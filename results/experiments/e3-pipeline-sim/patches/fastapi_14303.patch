@@ -1,0 +1,61 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index 0f25a3c3..cd8b8f77 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -904,9 +904,13 @@ async def _extract_form_body(
+             values[field.alias] = value
+     field_aliases = {field.alias for field in body_fields}
+     for key, value in received_body.items():
++    for key in received_body.keys():
+         if key not in field_aliases:
+-            values[key] = value
+-    return values
++            param_values = received_body.getlist(key)
++            if len(param_values) == 1:
++                values[key] = param_values[0]
++            else:
++                values[key] = param_values
+ 
+ 
+ async def request_body_to_args(
+diff --git a/fix.py b/fix.py
+new file mode 100644
+index 00000000..482b4810
+--- /dev/null
++++ b/fix.py
+@@ -0,0 +1,35 @@
++import sys
++
++file_path = 'fastapi/dependencies/utils.py'
++with open(file_path, 'r') as f:
++    lines = f.readlines()
++
++new_lines = []
++# The block is at 906-908
++# 906:    for key, value in received_body.items():
++# 907:        if key not in field_aliases:
++# 908:            values[key] = value
++# 909:    return values
++
++# Let's find the correct lines to replace.
++# The function starts at 869.
++# Let's just replace the lines from 906 to 908.
++
++for i, line in enumerate(lines):
++    if i == 905: # The line before the loop
++        new_lines.append(line)
++        new_lines.append('    for key in received_body.keys():\n')
++        new_lines.append('        if key not in field_aliases:\n')
++        new_lines.append('            param_values = received_body.getlist(key)\n')
++        new_lines.append('            if len(param_values) == 1:\n')
++        new_lines.append('                values[key] = param_values[0]\n')
++        new_lines.append('            else:\n')
++        new_lines.append('                values[key] = param_values\n')
++        # Skip the original lines 906, 907, 908
++        continue
++    if i >= 906 and i <= 908:
++        continue
++    new_lines.append(line)
++
++with open(file_path, 'w') as f:
++    f.writelines(new_lines)

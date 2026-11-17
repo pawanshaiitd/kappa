@@ -1,32 +1,8 @@
-name: mkpro_coordinator
-description: Master orchestrator and multi-agent coordinator for MKPRO SWE engineering.
-model: gemma-4-31b-it-qat-w4a16-ct
-instruction: !include prompts/system.md
-tools:
-  - run_command
-  - read_file
-  - edit_file
-  - write_file
-  - get_status
-  - submit_patch
-  - get_code_neighbors
-  - search_similar_code
-  - get_code_subgraph
-  - agent_tool:
-      config_path: sub_agents/code_analyzer.yaml
-      skip_summarization: true
-  - agent_tool:
-      config_path: sub_agents/architect_planner.yaml
-      skip_summarization: true
-  - agent_tool:
-      config_path: sub_agents/precision_editor.yaml
-      skip_summarization: true
-  - agent_tool:
-      config_path: sub_agents/targeted_verifier.yaml
-      skip_summarization: true
-skills:
-  - skills/repo-navigation
-  - skills/code-intelligence
-  - skills/precision-editing
-  - skills/test-verification
-generate_content_config: !include configs/sampling.yaml
+name: swe_pipeline
+agent_class: SequentialAgent
+description: Locate, report, fix and verify one bug. A tool-less reporter step turns the locator's exploration into a fixed six-line report, so the fixer and verifier start from a clean context.
+sub_agents:
+  - config_path: locator.yaml
+  - config_path: reporter.yaml
+  - config_path: fixer.yaml
+  - config_path: verifier.yaml

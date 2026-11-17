@@ -1,0 +1,13 @@
+diff --git a/fastapi/routing.py b/fastapi/routing.py
+index 3f78e93e..c6291052 100644
+--- a/fastapi/routing.py
++++ b/fastapi/routing.py
+@@ -22,7 +22,7 @@ from typing import (
+ )
+ 
+ from annotated_doc import Doc
+-from fastapi import params, temp_pydantic_v1_params
++from fastapi import params
+ from fastapi._compat import (
+     ModelField,
+     Undefined,

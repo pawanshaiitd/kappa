@@ -1,0 +1,47 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index c5c6b69b..2f599f2a 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -121,7 +121,7 @@ def ensure_multipart_is_installed() -> None:
+             raise RuntimeError(multipart_not_installed_error) from None
+ 
+ 
+-def get_parameterless_sub_dependant(*, depends: params.Depends, path: str) -> Dependant:
++def get_parameterless_sub_dependant(*, depends: params.Depends, path: str, scope: Optional[Union[Literal["function", "request"]]] = None) -> Dependant:
+     assert callable(depends.dependency), (
+         "A parameter-less dependency must have a callable dependency"
+     )
+@@ -129,7 +129,10 @@ def get_parameterless_sub_dependant(*, depends: params.Depends, path: str) -> De
+     if isinstance(depends, params.Security) and depends.scopes:
+         use_security_scopes.extend(depends.scopes)
+     return get_dependant(
+-        path=path, call=depends.dependency, security_scopes=use_security_scopes
++        path=path,
++        call=depends.dependency,
++        security_scopes=use_security_scopes,
++        scope=depends.scope if depends.scope is not None else scope,
+     )
+ 
+ 
+diff --git a/fastapi/routing.py b/fastapi/routing.py
+index a8e12eb6..852ac54a 100644
+--- a/fastapi/routing.py
++++ b/fastapi/routing.py
+@@ -486,7 +486,7 @@ class APIWebSocketRoute(routing.WebSocketRoute):
+         for depends in self.dependencies[::-1]:
+             self.dependant.dependencies.insert(
+                 0,
+-                get_parameterless_sub_dependant(depends=depends, path=self.path_format),
++                get_parameterless_sub_dependant(depends=depends, path=self.path_format, scope="function"),
+             )
+         self._flat_dependant = get_flat_dependant(self.dependant)
+         self._embed_body_fields = _should_embed_body_fields(
+@@ -639,7 +639,7 @@ class APIRoute(routing.Route):
+         for depends in self.dependencies[::-1]:
+             self.dependant.dependencies.insert(
+                 0,
+-                get_parameterless_sub_dependant(depends=depends, path=self.path_format),
++                get_parameterless_sub_dependant(depends=depends, path=self.path_format, scope="function"),
+             )
+         self._flat_dependant = get_flat_dependant(self.dependant)
+         self._embed_body_fields = _should_embed_body_fields(

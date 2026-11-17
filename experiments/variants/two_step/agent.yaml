@@ -1,0 +1,6 @@
+name: swe_two_step
+agent_class: SequentialAgent
+description: Solve (locate and edit), then verify and submit with a fresh context.
+sub_agents:
+  - config_path: solver.yaml
+  - config_path: verifier.yaml

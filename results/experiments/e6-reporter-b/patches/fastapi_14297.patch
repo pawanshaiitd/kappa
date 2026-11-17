@@ -1,0 +1,17 @@
+diff --git a/fastapi/_compat/v2.py b/fastapi/_compat/v2.py
+index 7196a619..a82a9fd3 100644
+--- a/fastapi/_compat/v2.py
++++ b/fastapi/_compat/v2.py
+@@ -371,6 +371,12 @@ def copy_field_info(*, field_info: FieldInfo, annotation: Any) -> FieldInfo:
+ 
+ def serialize_sequence_value(*, field: ModelField, value: Any) -> Sequence[Any]:
+     origin_type = get_origin(field.field_info.annotation) or field.field_info.annotation
++    if origin_type is Union or (hasattr(origin_type, "__name__") and origin_type.__name__ == "UnionType"):
++        origin_type = next(
++            arg
++            for arg in get_args(field.field_info.annotation)
++            if isinstance(arg, type) and issubclass(arg, shared.sequence_types)
++        )
+     assert issubclass(origin_type, shared.sequence_types)  # type: ignore[arg-type]
+     return shared.sequence_annotation_to_type[origin_type](value)  # type: ignore[no-any-return]
+ 

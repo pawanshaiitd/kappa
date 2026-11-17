@@ -1,0 +1,687 @@
+[1mexperiment:[0m g31-e2-pipeline   [1mvariant:[0m declare_model=gemma-4-31b-it-qat-w4a16-ct, max_time_minutes=30.0
+[1mmodel:[0m google/gemma-4-31B-it-qat-w4a16-ct via openai   [1mtasks:[0m 30 of 30   [1mclock:[0m wall
+[1mendpoint:[0m http://10.120.12.55:8000/v1
+
+[93mtool-call budget exhausted - ending session.[0m
+[1/30] fastapi_14258  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 482.1s peak_prompt=10161 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 993 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/fda4695ce7e4da7c/bin/pytest tests/test_file_and_form_order_issue_9116.py -q -W default  [env fda4695ce7e4da7c]
+[Verification Test Output]:
+....                                                                     [100%]
+=============================== warnings summary ===============================
+../../../../../../../../Users/pawankumar.s/Documents/kappa/.venv_cache/fda4695ce7e4da7c/lib/python3.12/site-packages/starlette/testclient.py:51
+  /Users/pawankumar.s/Documents/kappa/.venv_cache/fda4695ce7e4da7c/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+4 passed, 1 warning in 0.26s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[2/30] fastapi_11194  -> [92mRESOLVED[0m  turns=24 calls=22 patch=993B 814.1s peak_prompt=9675 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[3/30] fastapi_14262  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 922.0s peak_prompt=9048 end=tool-call_budget_exhausted
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/01e9b61bd411ac3d/bin/pytest tests/test_dependency_yield_scope.py -q -W default  [env 01e9b61bd411ac3d]
+[Verification Test Output]:
+...........                                                              [100%]
+=============================== warnings summary ===============================
+../../../../../../../../Users/pawankumar.s/Documents/kappa/.venv_cache/01e9b61bd411ac3d/lib/python3.12/site-packages/starlette/testclient.py:51
+  /Users/pawankumar.s/Documents/kappa/.venv_cache/01e9b61bd411ac3d/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+11 passed, 1 warning in 0.24s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[4/30] fastapi_14301  -> [92mRESOLVED[0m  turns=23 calls=20 patch=685B 614.0s peak_prompt=3969 end=submit_patch
+
+[93mtool-call budget exhausted - ending session.[0m
+[5/30] fastapi_13786  -> [91mno_edit_attempted[0m  turns=24 calls=22 patch=0B 1534.4s peak_prompt=11920 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 5703 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/35422b7e951e0004/bin/pytest tests/test_compat.py -q -W default  [env 35422b7e951e0004]
+[Verification Test Output]:
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_compat.py _____________________
+/Users/pawankumar.s/Documents/kappa/.venv_cache/35422b7e951e0004/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+/Users/pawankumar.s/Documents/kappa/.venv_cache/35422b7e951e0004/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/Users/pawankumar.s/Documents/kappa/.venv_cache/35422b7e951e0004/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests/test_compat.py:3: in <module>
+    from fastapi import FastAPI, UploadFile
+fastapi/__init__.py:7: in <module>
+    from .applications import FastAPI as FastAPI
+fastapi/applications.py:16: in <module>
+    from fastapi import routing
+fastapi/routing.py:27: in <module>
+    from fastapi import params, temp_
+[Verification Result] Resolved: False (Exit Code: 2)
+[6/30] fastapi_14186  -> [91mtests_failed[0m  turns=23 calls=22 patch=5703B 1722.0s peak_prompt=12776 end=tool-call_budget_exhausted
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_forms_single_model.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+......                                                                   [100%]
+=============================== warnings summary ===============================
+../../../../../../../../Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45
+  /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+6 passed, 1 warning in 0.25s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[7/30] fastapi_14303  -> [92mRESOLVED[0m  turns=21 calls=18 patch=745B 723.9s peak_prompt=5678 end=submit_patch
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_request_param_model_by_alias.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+......                                                                   [100%]
+=============================== warnings summary ===============================
+../../../../../../../../Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45
+  /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+6 passed, 1 warning in 0.38s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[8/30] fastapi_14360  -> [92mRESOLVED[0m  turns=20 calls=17 patch=635B 678.9s peak_prompt=5558 end=submit_patch
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 1900 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_validation_error_context.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+___________ test_request_validation_error_includes_endpoint_context ____________
+
+    def test_request_validation_error_includes_endpoint_context():
+        captured_exception.exception = None
+        try:
+            client.get("/users/invalid")
+        except Exception:
+            pass
+    
+        assert captured_exception.exception is not None
+        error_str = str(captured_exception.exception)
+>       assert "get_user" in error_str
+E       assert 'get_user' in "1 validation error(s):\n  {'type': 'int_parsing', 'loc': ('path', 'user_id'), 'msg': 'Input should be a valid integer, unable to parse string as an integer', 'input': 'invalid'}\n"
+
+tests/test_validation_error_context.py:96: AssertionError
+___________ test_response_validation_error_includes_endpoint_context ___________
+
+    def test_response_validation_error_includes_endpoint_context():
+        captured_exception.exception = None
+        try:
+            client.get("/items/")
+        except Exception:
+            pass
+    
+        assert captured_exception.exception is not None
+        error_str = str(captured_exception.exception)
+>       assert "get_item" in error_str
+E       assert 'get_item' in "1 validation error(s):\n  {'type': 'missing', 'loc': ('response', 'id'), 'msg': 'Field required', 'input': {'name': 'Widget'}}\n"
+
+tests/test_validation_erro
+[Verification Result] Resolved: False (Exit Code: 1)
+[9/30] fastapi_14306  -> [91mtests_failed[0m  turns=23 calls=22 patch=1900B 1003.2s peak_prompt=7622 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 516 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_depends_hashable.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+.                                                                        [100%]
+1 passed in 0.19s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[10/30] fastapi_14372  -> [92mRESOLVED[0m  turns=24 calls=22 patch=516B 860.1s peak_prompt=7754 end=tool-call_budget_exhausted
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_tutorial/test_handling_errors/test_tutorial004.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+F...                                                                     [100%]
+=================================== FAILURES ===================================
+__________________________ test_get_validation_error ___________________________
+
+    def test_get_validation_error():
+        response = client.get("/items/foo")
+        assert response.status_code == 400, response.text
+>       assert "Validation errors:" in response.text
+E       assert 'Validation errors:' in '1 validation error:\n  {\'type\': \'int_parsing\', \'loc\': (\'path\', \'item_id\'), \'msg\': \'Input should be a val...api_14487_365pdxqp/workspace/docs_src/handling_errors/tutorial004.py", line 19, in read_item\n    GET /items/{item_id}'
+E        +  where '1 validation error:\n  {\'type\': \'int_parsing\', \'loc\': (\'path\', \'item_id\'), \'msg\': \'Input should be a val...api_14487_365pdxqp/workspace/docs_src/handling_errors/tutorial004.py", line 19, in read_item\n    GET /items/{item_id}' = <Response [400 Bad Request]>.text
+
+tests/test_tutorial/test_handling_errors/test_tutorial004.py:11: AssertionError
+=============================== warnings summary ===============================
+../../../../../../../../Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45
+  /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is de
+[Verification Result] Resolved: False (Exit Code: 1)
+[11/30] fastapi_14487  -> [91mtests_failed[0m  turns=23 calls=20 patch=2213B 672.3s peak_prompt=4818 end=submit_patch
+
+[93mtool-call budget exhausted - ending session.[0m
+[12/30] fastapi_15280  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 667.5s peak_prompt=11179 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[13/30] fastapi_14430  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 1514.3s peak_prompt=8989 end=tool-call_budget_exhausted
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_dependency_wrapped.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+....                                                                     [100%]
+=============================== warnings summary ===============================
+../../../../../../../../Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45
+  /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+4 passed, 1 warning in 0.21s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[14/30] fastapi_9555  -> [92mRESOLVED[0m  turns=24 calls=21 patch=1688B 839.2s peak_prompt=6426 end=submit_patch
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 36371 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/82257c00fb99919f/bin/pytest tests/test_compat.py -q -W default  [env 82257c00fb99919f]
+[Verification Test Output]:
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_compat.py _____________________
+ImportError while importing test module '/private/var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/swegemma_verif_fastapi_14609_sh744xzx/workspace/tests/test_compat.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_compat.py:3: in <module>
+    from fastapi import FastAPI, UploadFile
+fastapi/__init__.py:7: in <module>
+    from .applications import FastAPI as FastAPI
+fastapi/applications.py:13: in <module>
+    from fastapi import routing
+fastapi/routing.py:25: in <module>
+    from fastapi import params, temp_pydantic_v1_params
+fastapi/params.py:8: in <module>
+    from fastapi.openapi.models import Example
+fastapi/openapi/models.py:5: in <module>
+    from fastapi._compat import (
+fastapi/_compat/__init__.py:1: in <module>
+    from .main import BaseConfig as BaseConfig
+fastapi/_compat/main.py:8: in <module>
+    from fastapi._compat import may_v1
+fastapi/_compat/may_v1.py:77: in <module>
+    from .v2 import AnyUrl as AnyUrl
+E   ImportError: cannot import name 'AnyUrl' from 'fastapi._compat.v2' (/private/var/folder
+[Verification Result] Resolved: False (Exit Code: 2)
+[15/30] fastapi_14609  -> [91mpatch_breaks_import[0m  turns=23 calls=22 patch=36371B 1378.0s peak_prompt=11772 end=tool-call_budget_exhausted
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_adapters.py -q -W default  [env 4352d33e65d29c27]
+[Verification Test Output]:
+.                                                                        [100%]
+1 passed in 0.01s
+
+[2026-11-17 14:13:33,230] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[16/30] requests_7315  -> [92mRESOLVED[0m  turns=18 calls=15 patch=522B 431.9s peak_prompt=3467 end=submit_patch
+
+[93m[nudge 1/3][0m Your previous response reached the token limit while thinking before a tool call was compl...
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 778 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_dependency_partial.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+.F...FFF..F.                                                             [100%]
+=================================== FAILURES ===================================
+_ test_dependency_types_with_partial[/partial-async-function-dependency-partial-async-function-dependency] _
+
+route = '/partial-async-function-dependency'
+value = 'partial-async-function-dependency'
+
+    @pytest.mark.parametrize(
+        "route,value",
+        [
+            ("/partial-function-dependency", "partial-function-dependency"),
+            (
+                "/partial-async-function-dependency",
+                "partial-async-function-dependency",
+            ),
+            ("/partial-gen-dependency", "partial-gen-dependency"),
+            ("/partial-async-gen-dependency", "partial-async-gen-dependency"),
+            ("/partial-callable-dependency", "partial-callable-dependency"),
+            ("/partial-callable-gen-dependency", "partial-callable-gen-dependency"),
+            ("/partial-async-callable-dependency", "partial-async-callable-dependency"),
+            (
+                "/partial-async-callable-gen-dependency",
+                "partial-async-callable-gen-dependency",
+            ),
+            (
+                "/partial-synchronous-method-dependency",
+                "partial-synchronous-method-dependency",
+            ),
+            (
+                "/partial-synchronous-method-gen-dependency",
+                "partial-synchronous-method-gen-dependency",
+            ),
+            (
+            
+/Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/_pytest/unraisableexception.py:33: RuntimeWarning: coroutine 'AsyncCallableDependency.__call__' was never awaited
+  gc.collect()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+/Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/_pytest/unraisableexception.py:33: RuntimeWarning: coroutine 'MethodsDependency.asynchronous' was never await
+[Verification Result] Resolved: False (Exit Code: 1)
+[17/30] fastapi_9753  -> [91mtests_failed[0m  turns=24 calls=22 patch=778B 1149.0s peak_prompt=6840 end=tool-call_budget_exhausted
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/d701d52285d2e297/bin/pytest tests/test_table.py -q -W default  [env d701d52285d2e297]
+[Verification Test Output]:
+...................                                                      [100%]
+19 passed in 0.10s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[18/30] rich_2725  -> [92mRESOLVED[0m  turns=16 calls=13 patch=609B 345.6s peak_prompt=5531 end=submit_patch
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/d701d52285d2e297/bin/pytest tests/test_style.py -q -W default  [env d701d52285d2e297]
+[Verification Test Output]:
+...........................                                              [100%]
+27 passed in 0.04s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[19/30] rich_2943  -> [92mRESOLVED[0m  turns=15 calls=12 patch=400B 336.9s peak_prompt=5033 end=submit_patch
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 582 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/3bd2b5b0cae32f07/bin/pytest tests/test_requests.py -q -W default  [env 3bd2b5b0cae32f07]
+[Verification Test Output]:
+........................................................................ [ 21%]
+.................................................s.pytest-httpbin server hit an exception serving request: [SSL: TLSV1_ALERT_UNKNOWN_CA] tlsv1 alert unknown ca (_ssl.c:1010)
+attempting to ignore so the rest of the tests can run
+..................... [ 42%]
+........................................................................ [ 63%]
+.........................x.............................................. [ 84%]
+....................................................                     [100%]
+=============================== warnings summary ===============================
+tests/test_requests.py::TestRequests::test_set_basicauth[42-42]
+  /var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/swegemma_verif_requests_7502_006kjuad/workspace/src/requests/auth.py:45: DeprecationWarning: Non-string usernames will no longer be supported in Requests 3.0.0. Please convert the object you've passed in (42) to a string or bytes object in the near future to avoid problems.
+    warnings.warn(
+
+tests/test_requests.py::TestRequests::test_set_basicauth[42-42]
+  /var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/swegemma_verif_requests_7502_006kjuad/workspace/src/requests/auth.py:55: DeprecationWarning: Non-string passwords will no longer be supported in Requests 3.0.0. Please convert the object you've passed in (<class 'int'>) to a string or bytes object in the near future to avoid problems.
+    warnings.warn(
+
+tests/test_
+[2026-11-17 14:24:28,050] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[20/30] requests_7502  -> [92mRESOLVED[0m  turns=23 calls=22 patch=582B 1000.1s peak_prompt=7017 end=tool-call_budget_exhausted
+
+[93mmax turns - ending session.[0m
+[93mNo submit_patch; recovered 692 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_utils.py -q -W default  [env 4352d33e65d29c27]
+[Verification Test Output]:
+..s..................................................................... [ 32%]
+........................................................................ [ 65%]
+...........................................................sssssssssss.. [ 98%]
+...s                                                                     [100%]
+=============================== warnings summary ===============================
+tests/test_utils.py::TestContentEncodingDetection::test_none
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta charset="UTF-8">]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta http-equiv="Content-type" content="text/html;charset=UTF-8">]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<?xml version="1.0" encoding="UTF-8"?>]
+tests/test_utils.py::TestContentEncodingDetection::test_precedence
+  /var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/swegemma_verif_requests_7309_ore937hd/workspace/src/requests/utils.py:484: DeprecationWarning: In requests 3.0, get_encodings_from_content will be removed. For more information, please see the discussion on issue #2266. (This warning should only appear once.)
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+207 passed, 13 skipped, 6 warnings in 0.14s
+
+[2026-11-17 14:26:56,913] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[21/30] requests_7309  -> [92mRESOLVED[0m  turns=26 calls=21 patch=692B 1324.5s peak_prompt=6790 end=max_turns
+
+[92msubmit_patch called - ending session.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/d701d52285d2e297/bin/pytest tests/test_prompt.py -q -W default  [env d701d52285d2e297]
+[Verification Test Output]:
+.F.....                                                                  [100%]
+=================================== FAILURES ===================================
+_______________________ test_prompt_str_case_insensitive _______________________
+
+    def test_prompt_str_case_insensitive():
+        INPUT = "egg\nFoO"
+        console = Console(file=io.StringIO())
+        name = Prompt.ask(
+            "what is your name",
+            console=console,
+            choices=["foo", "bar"],
+            default="baz",
+            case_sensitive=False,
+            stream=io.StringIO(INPUT),
+        )
+>       assert name == "foo"
+E       AssertionError: assert 'FoO' == 'foo'
+E         
+E         - foo
+E         + FoO
+
+tests/test_prompt.py:35: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_prompt.py::test_prompt_str_case_insensitive - AssertionErro...
+1 failed, 6 passed in 0.08s
+
+[Verification Result] Resolved: False (Exit Code: 1)
+[22/30] rich_3052  -> [91mtests_failed[0m  turns=23 calls=20 patch=2958B 823.0s peak_prompt=7126 end=submit_patch
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 413 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/d701d52285d2e297/bin/pytest tests/test_markup.py -q -W default  [env d701d52285d2e297]
+[Verification Test Output]:
+...F.................                                                    [100%]
+=================================== FAILURES ===================================
+__________________________ test_escape_backslash_end ___________________________
+
+    def test_escape_backslash_end():
+        # https://github.com/Textualize/rich/issues/2987
+        value = "C:\\"
+>       assert escape(value) == "C:\\\\"
+E       AssertionError: assert 'C:\\' == 'C:\\\\'
+E         
+E         - C:\\
+E         ?    -
+E         + C:\
+
+tests/test_markup.py:50: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_markup.py::test_escape_backslash_end - AssertionError: asse...
+1 failed, 20 passed in 0.09s
+
+[Verification Result] Resolved: False (Exit Code: 1)
+[23/30] rich_3063  -> [91mtests_failed[0m  turns=24 calls=22 patch=413B 1271.7s peak_prompt=6493 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[24/30] rich_3105  -> [91mno_edit_attempted[0m  turns=24 calls=22 patch=0B 1328.9s peak_prompt=19022 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 343 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/d701d52285d2e297/bin/pytest tests/test_traceback.py -q -W default  [env d701d52285d2e297]
+[Verification Test Output]:
+...................sF                                                    [100%]
+=================================== FAILURES ===================================
+________________________ test_traceback_finely_grained _________________________
+
+    @pytest.mark.skipif(
+        sys.version_info.minor < 11, reason="Not applicable before Python 3.11"
+    )
+    def test_traceback_finely_grained() -> None:
+        """Check that last instruction is populated."""
+        try:
+>           1 / 0
+E           ZeroDivisionError: division by zero
+
+tests/test_traceback.py:351: ZeroDivisionError
+
+During handling of the above exception, another exception occurred:
+
+    @pytest.mark.skipif(
+        sys.version_info.minor < 11, reason="Not applicable before Python 3.11"
+    )
+    def test_traceback_finely_grained() -> None:
+        """Check that last instruction is populated."""
+        try:
+            1 / 0
+        except:
+            traceback = Traceback()
+>           last_instruction = traceback.trace.stacks[-1].frames[-1].last_instruction
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'Frame' object has no attribute 'last_instruction'
+
+tests/test_traceback.py:354: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_traceback.py::test_traceback_finely_grained - AttributeErro...
+1 failed, 19 passed, 1 skipped in 0.30s
+
+[Verification Result] Resolved: False (Exit Code: 1)
+[25/30] rich_3486  -> [91mtests_failed[0m  turns=24 calls=22 patch=343B 1282.2s peak_prompt=8524 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 1486 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/a90fce46fa6a543f/bin/pytest tests/test_inspect.py -q -W default  [env a90fce46fa6a543f]
+[Verification Test Output]:
+...s....sss...................................                           [100%]
+42 passed, 4 skipped in 0.10s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[26/30] rich_3894  -> [92mRESOLVED[0m  turns=24 calls=22 patch=1486B 1254.1s peak_prompt=10893 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 448 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/a90fce46fa6a543f/bin/pytest tests/test_ansi.py -q -W default  [env a90fce46fa6a543f]
+[Verification Test Output]:
+FFF....................F                                                 [100%]
+=================================== FAILURES ===================================
+_________________________________ test_decode __________________________________
+
+    def test_decode():
+        console = Console(
+            force_terminal=True, legacy_windows=False, color_system="truecolor"
+        )
+        console.begin_capture()
+        console.print("Hello")
+        console.print("[b]foo[/b]")
+        console.print("[link http://example.org]bar")
+        console.print("[#ff0000 on color(200)]red")
+        console.print("[color(200) on #ff0000]red")
+        terminal_codes = console.end_capture()
+    
+        decoder = AnsiDecoder()
+        lines = list(decoder.decode(terminal_codes))
+        print(repr(lines))
+        expected = [
+            Text("Hello"),
+            Text("foo", spans=[Span(0, 3, Style.parse("bold"))]),
+            Text("bar", spans=[Span(0, 3, Style.parse("link http://example.org"))]),
+            Text("red", spans=[Span(0, 3, Style.parse("#ff0000 on color(200)"))]),
+            Text("red", spans=[Span(0, 3, Style.parse("color(200) on #ff0000"))]),
+            Text(""),
+        ]
+    
+>       assert lines == expected
+E       AssertionError: assert [<text 'Hello...ue=0))))] ''>] == [<text 'Hello...ext '' [] ''>]
+E         
+E         Right contains one more item: <text '' [] ''>
+E         Use -v to get more diff
+
+tests/test_ansi.py:33: AssertionError
+-------------------------
+[Verification Result] Resolved: False (Exit Code: 1)
+[27/30] rich_4076  -> [91mtests_failed[0m  turns=24 calls=22 patch=448B 918.9s peak_prompt=6933 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 2745 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[28/30] rich_3930  -> [91mno_edit_attempted[0m  turns=24 calls=22 patch=0B 1487.4s peak_prompt=13444 end=tool-call_budget_exhausted
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/a90fce46fa6a543f/bin/pytest tests/test_console.py -q -W default  [env a90fce46fa6a543f]
+[Verification Test Output]:
+
+==================================== ERRORS ====================================
+_______________________ ERROR collecting test_console.py _______________________
+tests/test_console.py:15: in <module>
+    from rich.console import (
+rich/console.py:585: in <module>
+    class Console:
+rich/console.py:1902: in Console
+    currentframe: Callable[[], Optional[FrameType]] = inspect.currentframe,
+                                                      ^^^^^^^
+E   NameError: name 'inspect' is not defined. Did you forget to import 'inspect'
+=========================== short test summary info ============================
+ERROR tests/test_console.py - NameError: name 'inspect' is not defined. Did y...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.16s
+
+[Verification Result] Resolved: False (Exit Code: 2)
+[29/30] rich_4070  -> [91mpatch_breaks_import[0m  turns=23 calls=22 patch=2745B 1315.1s peak_prompt=11495 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 396 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/a90fce46fa6a543f/bin/pytest tests/test_file_proxy.py -q -W default  [env a90fce46fa6a543f]
+[Verification Test Output]:
+....                                                                     [100%]
+4 passed in 0.06s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[30/30] rich_4077  -> [92mRESOLVED[0m  turns=23 calls=22 patch=396B 1162.3s peak_prompt=8422 end=tool-call_budget_exhausted
+
+========================================================================
+[1m  g31-e2-pipeline[0m   variant: declare_model=gemma-4-31b-it-qat-w4a16-ct, max_time_minutes=30.0
+========================================================================
+  resolution rate : [92m0.433[0m  (13/30)
+  failure buckets : {'resolved': 13, 'no_edit_attempted': 7, 'tests_failed': 8, 'patch_breaks_import': 2}
+  end reasons     : {'tool-call_budget_exhausted': 20, 'submit_patch': 9, 'max_turns': 1}
+  medians         : turns=23.0 calls=22.0 secs=961.0 first_edit_turn=15.0
+  empty patches   : 7   explicit submits: 9
+  tool errors     : {'run_command:CommandError': 41, 'get_code_neighbors:NotIndexed': 3, 'edit_file:FileEditError': 1}
+  failing commands: {'python3 -c': 15, 'grep -n': 8, 'grep -rn': 4, 'grep -nE': 3, 'cat <<EOF': 3, 'pytest -k': 2, 'pytest tests/test_dependencies_utils.py': 1, 'sed -i': 1, 'grep "import': 1, 'python3 -m': 1, 'grep -i': 1, 'pytest': 1}
+  context         : median peak prompt=7688.0 tok  max=19022 tok  compactions=0
+  phase locator     : llm_calls=13.5  tool_calls=12.5  prompt_tokens=75745  output_tokens=4999
+  phase fixer       : llm_calls=6  tool_calls=5  prompt_tokens=16810  output_tokens=1760
+  phase verifier    : llm_calls=6  tool_calls=6  prompt_tokens=12455  output_tokens=451
+  time per task   : mean=995.3s p90=1487.4s max=1722.0s  (API wall clock - NOT a Gemma estimate)
+
+Artifacts: /Users/pawankumar.s/Documents/kappa/results/experiments/g31-e2-pipeline

@@ -39,7 +39,9 @@ from __future__ import annotations
 
 import argparse
 import collections
+import concurrent.futures
 import json
+import math
 import os
 import random
 import shutil
@@ -63,9 +65,12 @@ from scripts.submission_harness import (  # noqa: E402
     C_RED,
     C_RESET,
     C_YELLOW,
+    DEFAULT_API_BASE,
+    SIM_PRESETS,
     Submission,
     classify_failure,
     make_backend,
+    make_sim,
     run_task,
 )
 from scripts.run_gemini_benchmark import verify_agent_patch  # noqa: E402
@@ -302,8 +307,23 @@ def build_variant(src: Path, dest: Path, args: argparse.Namespace) -> List[str]:
 
     agent_file.write_text(agent_raw, encoding="utf-8")
 
+    if getattr(args, "drop_section", None):
+        # Remove a "## <title>" section from every prompt, to A/B one block of guidance.
+        import re as _re
+        for md in sorted((dest / "prompts").glob("*.md")):
+            txt = md.read_text(encoding="utf-8")
+            for title in args.drop_section:
+                txt = _re.sub(
+                    rf"(?ms)^## {_re.escape(title)}\s*\n.*?(?=^## |\Z)", "", txt)
+            md.write_text(txt, encoding="utf-8")
+        applied.append(f"drop_section={','.join(args.drop_section)}")
+
+    agent_yamls = sorted(
+        y for y in list(dest.glob("*.yaml")) + list((dest / "sub_agents").glob("*.yaml"))
+        if y.name != "eval_config.yaml"
+    )
     if args.declare_model:
-        for y in [agent_file, *sorted((dest / "sub_agents").glob("*.yaml"))]:
+        for y in agent_yamls:
             txt = y.read_text(encoding="utf-8")
             y.write_text(
                 "\n".join(
@@ -316,8 +336,12 @@ def build_variant(src: Path, dest: Path, args: argparse.Namespace) -> List[str]:
         applied.append(f"declare_model={args.declare_model}")
 
     samp_file = dest / "configs" / "sampling.yaml"
-    samp = yaml.safe_load(samp_file.read_text(encoding="utf-8")) or {}
+    samp = (yaml.safe_load(samp_file.read_text(encoding="utf-8")) or {}) if samp_file.exists() else {}
     changed = False
+    if getattr(args, "include_thoughts", None) is not None:
+        samp.setdefault("thinking_config", {})["include_thoughts"] = args.include_thoughts == "true"
+        changed = True
+        applied.append(f"include_thoughts={args.include_thoughts}")
     if args.thinking_budget is not None:
         samp.setdefault("thinking_config", {})["thinking_budget"] = args.thinking_budget
         changed = True
@@ -331,10 +355,14 @@ def build_variant(src: Path, dest: Path, args: argparse.Namespace) -> List[str]:
         changed = True
         applied.append(f"max_output_tokens={args.max_output_tokens}")
     if changed:
+        samp_file.parent.mkdir(parents=True, exist_ok=True)
         samp_file.write_text(yaml.safe_dump(samp, sort_keys=False), encoding="utf-8")
-        # sub-agents carry sampling inline, so mirror the change there too
-        for y in sorted((dest / "sub_agents").glob("*.yaml")):
-            cfg = yaml.safe_load(y.read_text(encoding="utf-8"))
+        # Agent YAMLs that carry sampling inline (no !include) must be changed too.
+        for y in agent_yamls:
+            raw = y.read_text(encoding="utf-8")
+            if "!include" in raw or "generate_content_config" not in raw:
+                continue
+            cfg = yaml.safe_load(raw)
             cfg["generate_content_config"] = samp
             y.write_text(yaml.safe_dump(cfg, sort_keys=False, width=10**6), encoding="utf-8")
 
@@ -343,6 +371,7 @@ def build_variant(src: Path, dest: Path, args: argparse.Namespace) -> List[str]:
     for key, val in (
         ("max_tool_calls", args.max_tool_calls),
         ("max_time_minutes", args.max_time_minutes),
+        ("max_turns", getattr(args, "max_turns", None)),
     ):
         if val is not None:
             ec["evaluation"][key] = val
@@ -356,7 +385,8 @@ def build_variant(src: Path, dest: Path, args: argparse.Namespace) -> List[str]:
 # Reporting
 # --------------------------------------------------------------------------------------
 
-def summarise(name: str, variant: List[str], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarise(name: str, variant: List[str], rows: List[Dict[str, Any]],
+              setup_seconds: float = 60.0) -> Dict[str, Any]:
     done = [r for r in rows if not r.get("crashed")]
     resolved = [r for r in done if r.get("resolved")]
     buckets = collections.Counter(r.get("failure_bucket", "crashed") for r in rows)
@@ -377,9 +407,46 @@ def summarise(name: str, variant: List[str], rows: List[Dict[str, Any]]) -> Dict
         vals = [r[key] for r in done if isinstance(r.get(key), (int, float))]
         return round(statistics.median(vals), 1) if vals else None
 
+    def pct(vals: List[float], q: float) -> Optional[float]:
+        if not vals:
+            return None
+        vals = sorted(vals)
+        return round(vals[min(len(vals) - 1, int(math.ceil(q * len(vals))) - 1)], 1)
+
+    secs = [float(r["elapsed_seconds"]) for r in done if isinstance(r.get("elapsed_seconds"), (int, float))]
+    simulated = bool(done) and all(r.get("simulated_clock") for r in done)
+    projection: Dict[str, Any] = {"simulated_clock": simulated, "setup_seconds": setup_seconds}
+    if secs:
+        mean = statistics.mean(secs)
+        projection.update({
+            "task_seconds_mean": round(mean, 1),
+            "task_seconds_p90": pct(secs, 0.9),
+            "task_seconds_max": round(max(secs), 1),
+            # 0.25 h for model download and vLLM start-up before the first task.
+            "notebook_hours": {
+                str(n): round(0.25 + n * (mean + setup_seconds) / 3600.0, 1) for n in (124, 200, 300)
+            },
+        })
+
+    phases: Dict[str, Dict[str, List[int]]] = {}
+    for r in done:
+        for agent, st in (r.get("phase_stats") or {}).items():
+            for k, v in st.items():
+                phases.setdefault(agent, {}).setdefault(k, []).append(v)
+    phase_medians = {
+        agent: {k: statistics.median(v) for k, v in st.items()} for agent, st in phases.items()
+    }
+
     return {
         "name": name,
         "variant": variant or ["baseline"],
+        "projection": projection,
+        "phase_medians": phase_medians,
+        "median_prompt_tokens_max": med("prompt_tokens_max"),
+        "max_prompt_tokens": max((r.get("prompt_tokens_max") or 0 for r in done), default=0),
+        "median_output_tokens": med("output_tokens_total"),
+        "compactions": sum(r.get("compactions") or 0 for r in done),
+        "agent_envs": dict(collections.Counter(r.get("agent_env", "unknown") for r in done)),
         "tasks": len(rows),
         "resolved": len(resolved),
         "resolution_rate": round(len(resolved) / len(rows), 4) if rows else 0.0,
@@ -417,6 +484,101 @@ def print_summary(s: Dict[str, Any]) -> None:
         print(f"  tool errors     : {s['tool_errors']}")
     if s.get("failing_commands"):
         print(f"  failing commands: {s['failing_commands']}")
+    print(
+        f"  context         : median peak prompt={s.get('median_prompt_tokens_max')} tok  "
+        f"max={s.get('max_prompt_tokens')} tok  compactions={s.get('compactions')}"
+    )
+    for agent, st in (s.get("phase_medians") or {}).items():
+        print(f"  phase {agent:<12}: " + "  ".join(f"{k}={v:g}" for k, v in st.items()))
+    pr = s.get("projection") or {}
+    if pr.get("notebook_hours"):
+        label = "simulated Gemma clock" if pr["simulated_clock"] else "API wall clock - NOT a Gemma estimate"
+        print(
+            f"  time per task   : mean={pr['task_seconds_mean']}s p90={pr['task_seconds_p90']}s "
+            f"max={pr['task_seconds_max']}s  ({label})"
+        )
+        if pr["simulated_clock"]:
+            cells = []
+            for n, h in pr["notebook_hours"].items():
+                col = C_RED if h > 15 else (C_YELLOW if h > 12 else C_GREEN)
+                cells.append(f"{n} tasks: {col}{h} h{C_RESET}")
+            print(f"  notebook (18 h) : " + "   ".join(cells)
+                  + f"   [+{pr['setup_seconds']:g}s setup per task]")
+
+
+def analyze(name: str) -> None:
+    """Turn one experiment's rows and traces into a list of what to fix next."""
+    out_dir = EXPERIMENTS_DIR / name
+    rows_file = out_dir / "task_results.jsonl"
+    if not rows_file.exists():
+        raise SystemExit(f"no results at {rows_file}")
+    rows = [json.loads(l) for l in rows_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+    done = [r for r in rows if not r.get("crashed")]
+    print(f"\n{C_BOLD}{name}{C_RESET}: {len(rows)} tasks, "
+          f"{sum(1 for r in done if r.get('resolved'))} resolved")
+
+    print(f"\n{C_BOLD}Failure taxonomy{C_RESET}")
+    buckets: Dict[str, List[str]] = collections.defaultdict(list)
+    for r in rows:
+        buckets[r.get("failure_bucket", "crashed")].append(r["instance_id"])
+    for b, ids in sorted(buckets.items(), key=lambda kv: -len(kv[1])):
+        print(f"  {len(ids):>3}  {b:<24} {', '.join(ids[:8])}{' ...' if len(ids) > 8 else ''}")
+
+    print(f"\n{C_BOLD}How sessions ended{C_RESET}")
+    for reason, n in collections.Counter(r.get("end_reason") for r in done).most_common():
+        res = sum(1 for r in done if r.get("end_reason") == reason and r.get("resolved"))
+        print(f"  {n:>3}  {str(reason):<28} resolved {res}")
+
+    print(f"\n{C_BOLD}Import/collection errors in Phase 2{C_RESET}")
+    for r in done:
+        if r.get("failure_bucket") in ("patch_breaks_import", "test_env_broken"):
+            lines = [l.strip() for l in (r.get("verify_stdout") or "").splitlines()
+                     if l.strip().startswith("E ")]
+            print(f"  {r['instance_id']:<18} {r['failure_bucket']:<20} {(lines[-1] if lines else '')[:100]}")
+
+    print(f"\n{C_BOLD}Tool calls and errors{C_RESET}")
+    uses: "collections.Counter[str]" = collections.Counter()
+    errs: "collections.Counter[str]" = collections.Counter()
+    for r in done:
+        uses.update(r.get("tool_uses") or {})
+        errs.update(r.get("tool_errors") or {})
+    for tool, n in uses.most_common():
+        e = sum(v for k, v in errs.items() if k.startswith(tool + ":"))
+        print(f"  {tool:<22} {n:>5} calls  {e:>4} errors ({100*e/max(n,1):.0f}%)")
+
+    print(f"\n{C_BOLD}Most common failing commands{C_RESET}")
+    cmds: "collections.Counter[str]" = collections.Counter()
+    sample: Dict[str, str] = {}
+    for r in done:
+        for fc in r.get("failed_calls") or []:
+            if fc.get("tool") == "run_command":
+                key = " ".join(str(fc.get("arg", "")).split()[:2])
+                cmds[key] += 1
+                sample.setdefault(key, str(fc.get("detail", "")).strip().splitlines()[-1][:90]
+                                  if str(fc.get("detail", "")).strip() else "")
+    for key, n in cmds.most_common(10):
+        print(f"  {n:>3}  {key:<34} {sample.get(key, '')}")
+
+    print(f"\n{C_BOLD}Repeated identical calls (loops){C_RESET}")
+    loops = []
+    for tf in sorted((out_dir / "traces").glob("*.json")):
+        calls = collections.Counter(
+            (e.get("name"), e.get("arg")) for e in json.loads(tf.read_text(encoding="utf-8"))
+            if e.get("kind") == "tool"
+        )
+        worst = calls.most_common(1)
+        if worst and worst[0][1] >= 3:
+            loops.append((worst[0][1], tf.stem, worst[0][0]))
+    for n, iid, (tool, arg) in sorted(loops, reverse=True)[:10]:
+        print(f"  {n}x  {iid:<18} {tool}: {str(arg)[:70]}")
+    if not loops:
+        print("  none")
+
+    print(f"\n{C_BOLD}Slowest tasks{C_RESET}")
+    for r in sorted(done, key=lambda r: -(r.get("elapsed_seconds") or 0))[:8]:
+        print(f"  {r['instance_id']:<18} {r.get('elapsed_seconds'):>7}s  turns={r.get('turns')} "
+              f"calls={r.get('tool_calls')} peak_prompt={r.get('prompt_tokens_max')} "
+              f"{'resolved' if r.get('resolved') else r.get('failure_bucket')}")
 
 
 def compare() -> None:
@@ -471,7 +633,24 @@ def main() -> None:
 
     ap.add_argument("--backend", choices=["gemini", "openai", "mock"], default="gemini")
     ap.add_argument("--model", help="model actually called (defaults to the declared one)")
-    ap.add_argument("--api-base", default="http://127.0.0.1:8000/v1")
+    ap.add_argument("--api-base", default=os.environ.get("SWE_API_BASE", DEFAULT_API_BASE),
+                    help="OpenAI-compatible endpoint for --backend openai (env SWE_API_BASE)")
+    ap.add_argument("--analyze", metavar="NAME", help="print the failure analysis of an experiment and exit")
+    ap.add_argument("--resume", action="store_true",
+                    help="keep finished tasks in results/experiments/<name> and run only the rest")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="tasks run in parallel (use with --quiet; keep 1 against a single GPU)")
+    ap.add_argument("--sim", choices=sorted(SIM_PRESETS),
+                    help="run each task's clock at assumed Gemma speeds, so the time budget binds")
+    ap.add_argument("--sim-prefill-tps", type=float)
+    ap.add_argument("--sim-decode-tps", type=float)
+    ap.add_argument("--sim-setup-seconds", type=float, default=60.0,
+                    help="assumed container setup per task, used only in the notebook projection")
+    ap.add_argument("--exclude-set", help="JSON eval set whose ids are left out by --make-eval-set")
+    ap.add_argument("--drop-section", action="append",
+                    help='remove a "## <title>" section from every prompt (repeatable)')
+    ap.add_argument("--include-thoughts", choices=["true", "false"])
+    ap.add_argument("--max-turns", type=int)
 
     # one-variable overrides
     ap.add_argument("--no-subagents", action="store_true")
@@ -497,6 +676,9 @@ def main() -> None:
 
     if args.compare:
         compare()
+        return
+    if args.analyze:
+        analyze(args.analyze)
         return
 
     os.environ["SWE_TEST_ENV"] = args.test_env
@@ -528,6 +710,12 @@ def main() -> None:
         pool = None
         if args.from_pool:
             pool = json.loads(Path(args.from_pool).read_text(encoding="utf-8"))["instance_ids"]
+        if args.exclude_set:
+            # A second, disjoint eval set guards against tuning prompts to one 30-task sample.
+            skip = set(json.loads(Path(args.exclude_set).read_text(encoding="utf-8"))["instance_ids"])
+            if pool is None:
+                pool = [t["instance_id"] for t in load_tasks(tasks_file)]
+            pool = [i for i in pool if i not in skip]
         make_eval_set(tasks_file, snapshots, args.make_eval_set, args.seed, out,
                       pool=pool, match_distribution=args.match_distribution)
         return
@@ -571,65 +759,108 @@ def main() -> None:
         model = "gemini-2.5-flash"
     backend = make_backend(args.backend, model, api_base=args.api_base)
 
+    sim = make_sim(args)
     out_dir = EXPERIMENTS_DIR / args.name
     (out_dir / "patches").mkdir(parents=True, exist_ok=True)
+    (out_dir / "traces").mkdir(parents=True, exist_ok=True)
     results_file = out_dir / "task_results.jsonl"
-    results_file.write_text("", encoding="utf-8")
+
+    rows: List[Dict[str, Any]] = []
+    if args.resume and results_file.exists():
+        for line in results_file.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                if not row.get("crashed"):  # crashed tasks are retried
+                    rows.append(row)
+        results_file.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        finished = {r["instance_id"] for r in rows}
+        print(f"{C_YELLOW}resuming: {len(finished)} finished task(s) kept{C_RESET}")
+        ids_to_run = [i for i in ids if i not in finished]
+    else:
+        results_file.write_text("", encoding="utf-8")
+        ids_to_run = list(ids)
 
     print(f"{C_BOLD}experiment:{C_RESET} {args.name}   "
           f"{C_BOLD}variant:{C_RESET} {', '.join(applied) or 'baseline'}")
     print(f"{C_BOLD}model:{C_RESET} {model} via {args.backend}   "
-          f"{C_BOLD}tasks:{C_RESET} {len(ids)}")
+          f"{C_BOLD}tasks:{C_RESET} {len(ids_to_run)} of {len(ids)}   "
+          f"{C_BOLD}clock:{C_RESET} {('simulated ' + json.dumps(sim)) if sim else 'wall'}")
+    if args.backend == "openai":
+        print(f"{C_BOLD}endpoint:{C_RESET} {args.api_base}")
 
-    rows: List[Dict[str, Any]] = []
+    def one(iid: str) -> Dict[str, Any]:
+        task = all_tasks[iid]
+        snap = snapshots / f"{iid}.tgz"
+        if not snap.exists():
+            return {"instance_id": iid, "crashed": True, "error": "missing snapshot"}
+        try:
+            r = run_task(sub, task, snap, backend, verify=True, verbose=not args.quiet, sim=sim)
+            patch = r.pop("patch")
+            trace = r.pop("trace", [])
+            (out_dir / "patches" / f"{iid}.patch").write_text(patch, encoding="utf-8")
+            (out_dir / "traces" / f"{iid}.json").write_text(json.dumps(trace), encoding="utf-8")
+            r["failure_bucket"] = classify_failure(r)
+            return r
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:  # noqa: BLE001 - one bad task must not lose the run
+            traceback.print_exc(limit=3)
+            return {"instance_id": iid, "crashed": True, "error": str(e)}
+
+    def record(n: int, r: Dict[str, Any]) -> bool:
+        """Store one finished task. Returns False when the sweep should stop."""
+        rows.append(r)
+        if r.get("crashed"):
+            print(f"[{n}/{len(ids_to_run)}] {r['instance_id']}  {C_RED}crashed: {r.get('error')}{C_RESET}")
+        else:
+            mark = f"{C_GREEN}RESOLVED{C_RESET}" if r.get("resolved") else (
+                f"{C_RED}{r['failure_bucket']}{C_RESET}")
+            print(f"[{n}/{len(ids_to_run)}] {r['instance_id']}  -> {mark}  turns={r['turns']} "
+                  f"calls={r['tool_calls']} patch={r['patch_size']}B {r['elapsed_seconds']}s "
+                  f"peak_prompt={r.get('prompt_tokens_max')} end={r.get('end_reason')}")
+        with results_file.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(r) + "\n")
+        # Fail fast on a systemic problem (a rejected API key, an unreachable endpoint): if the
+        # first few tasks all die the same way, the remaining ones will too, and a long sweep
+        # would burn hours to produce a meaningless row of zeros.
+        crashed = [x for x in rows if x.get("crashed")]
+        if len(rows) >= 3 and len(crashed) == len(rows):
+            signatures = {str(x.get("error", ""))[:60] for x in crashed}
+            if len(signatures) == 1:
+                print(
+                    f"\n{C_RED}Aborting: the first {len(rows)} tasks all failed identically "
+                    f"- this is an environment problem, not a result.{C_RESET}\n"
+                    f"  {next(iter(signatures))}"
+                )
+                return False
+        return True
+
     try:
-        for n, iid in enumerate(ids, 1):
-            task = all_tasks[iid]
-            snap = snapshots / f"{iid}.tgz"
-            print(f"\n{C_CYAN}[{n}/{len(ids)}] {iid} ({task['repo']}){C_RESET}")
-            if not snap.exists():
-                rows.append({"instance_id": iid, "crashed": True, "error": "missing snapshot"})
-            else:
-                try:
-                    r = run_task(sub, task, snap, backend, verify=True, verbose=not args.quiet)
-                    patch = r.pop("patch")
-                    (out_dir / "patches" / f"{iid}.patch").write_text(patch, encoding="utf-8")
-                    r["failure_bucket"] = classify_failure(r)
-                    rows.append(r)
-                    mark = f"{C_GREEN}RESOLVED{C_RESET}" if r.get("resolved") else (
-                        f"{C_RED}{r['failure_bucket']}{C_RESET}")
-                    print(f"  -> {mark}  turns={r['turns']} calls={r['tool_calls']} "
-                          f"patch={r['patch_size']}B {r['elapsed_seconds']}s")
-                except KeyboardInterrupt:
-                    raise
-                except Exception as e:  # noqa: BLE001 - one bad task must not lose the run
-                    print(f"  {C_RED}crashed: {e}{C_RESET}")
-                    traceback.print_exc(limit=3)
-                    rows.append({"instance_id": iid, "crashed": True, "error": str(e)})
-            # Fail fast on a systemic problem (a rejected API key, an unreachable endpoint): if the
-            # first few tasks all die the same way, the remaining ones will too, and a long sweep
-            # would burn hours to produce a meaningless row of zeros.
-            crashed = [r for r in rows if r.get("crashed")]
-            if len(rows) >= 3 and len(crashed) == len(rows):
-                signatures = {str(r.get("error", ""))[:60] for r in crashed}
-                if len(signatures) == 1:
-                    print(
-                        f"\n{C_RED}Aborting: the first {len(rows)} tasks all failed identically "
-                        f"- this is an environment problem, not a result.{C_RESET}\n"
-                        f"  {next(iter(signatures))}"
-                    )
+        if args.workers > 1:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool_ex:
+                futures = [pool_ex.submit(one, iid) for iid in ids_to_run]
+                for n, fut in enumerate(concurrent.futures.as_completed(futures), 1):
+                    if not record(n, fut.result()):
+                        for f in futures:
+                            f.cancel()
+                        break
+        else:
+            for n, iid in enumerate(ids_to_run, 1):
+                print(f"\n{C_CYAN}[{n}/{len(ids_to_run)}] {iid} ({all_tasks[iid]['repo']}){C_RESET}")
+                if not record(n, one(iid)):
                     break
-            with results_file.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(rows[-1]) + "\n")
     except KeyboardInterrupt:
-        print(f"\n{C_YELLOW}Interrupted; summarising what finished.{C_RESET}")
+        print(f"\n{C_YELLOW}Interrupted; summarising what finished. Re-run with --resume to continue.{C_RESET}")
     finally:
         if args.keep_variant:
             print(f"Variant kept at {variant_dir}")
         else:
             shutil.rmtree(variant_root, ignore_errors=True)
 
-    summary = summarise(args.name, applied, rows)
+    order = {iid: n for n, iid in enumerate(ids)}
+    rows.sort(key=lambda r: order.get(r["instance_id"], 10**6))
+    summary = summarise(args.name, applied, rows, setup_seconds=args.sim_setup_seconds)
+    summary["sim"] = sim
     summary["eval_set"] = args.eval_set or "explicit-ids"
     summary["model"] = model
     summary["backend"] = args.backend

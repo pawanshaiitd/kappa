@@ -1,0 +1,18 @@
+diff --git a/fastapi/openapi/utils.py b/fastapi/openapi/utils.py
+index dbc93d28..e9b1c3ca 100644
+--- a/fastapi/openapi/utils.py
++++ b/fastapi/openapi/utils.py
+@@ -87,6 +87,13 @@ def get_openapi_security_definitions(
+             exclude_none=True,
+         )
+         security_name = security_requirement.security_scheme.scheme_name
++        if security_name in security_definitions:
++            existing_definition = security_definitions[security_name]
++            if "scopes" in security_definition and "scopes" in existing_definition:
++                new_scopes = set(existing_definition["scopes"]) | set(security_definition["scopes"])
++                security_definition["scopes"] = list(new_scopes)
++            elif "scopes" in security_definition:
++                security_definition["scopes"] = list(set(security_definition["scopes"]))
+         security_definitions[security_name] = security_definition
+         operation_security.append({security_name: security_requirement.scopes})
+     return security_definitions, operation_security

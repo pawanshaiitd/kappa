@@ -1,0 +1,7 @@
+diff --git a/.netrc b/.netrc
+new file mode 100644
+index 00000000..6475b746
+--- /dev/null
++++ b/.netrc
+@@ -0,0 +1 @@
++machine:host:password

@@ -1,0 +1,12 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index af2bed9a..59e233f6 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -44,7 +44,6 @@ from fastapi._compat import (
+     serialize_sequence_value,
+     value_is_sequence,
+ )
+-from fastapi._compat.shared import annotation_is_pydantic_v1
+ from fastapi.background import BackgroundTasks
+ from fastapi.concurrency import (
+     asynccontextmanager,

@@ -1,0 +1,93 @@
+{
+  "name": "e2-lean",
+  "variant": [
+    "baseline"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 140.7,
+    "task_seconds_p90": 209.3,
+    "task_seconds_max": 221.3,
+    "notebook_hours": {
+      "129": 7.4,
+      "200": 11.4,
+      "300": 17.0
+    }
+  },
+  "phase_medians": {
+    "swe_agent": {
+      "llm_calls": 23.0,
+      "tool_calls": 22.0,
+      "prompt_tokens": 151655.5,
+      "output_tokens": 5250.5
+    }
+  },
+  "median_prompt_tokens_max": 11751.0,
+  "max_prompt_tokens": 24196,
+  "median_output_tokens": 5250.5,
+  "compactions": 9,
+  "agent_envs": {
+    "fda4695ce7e4da7c": 1,
+    "cd8edd2480d890f5": 9,
+    "35422b7e951e0004": 1,
+    "816089f2a1d5780e": 1,
+    "01e9b61bd411ac3d": 2,
+    "82257c00fb99919f": 1,
+    "7c44ce1aa7eb82cb": 1,
+    "4352d33e65d29c27": 2,
+    "3bd2b5b0cae32f07": 1,
+    "d701d52285d2e297": 6,
+    "a90fce46fa6a543f": 5
+  },
+  "tasks": 30,
+  "resolved": 6,
+  "resolution_rate": 0.2,
+  "failure_buckets": {
+    "no_edit_attempted": 19,
+    "tests_failed": 4,
+    "patch_breaks_import": 1,
+    "resolved": 6
+  },
+  "median_turns": 23.0,
+  "median_tool_calls": 22.0,
+  "median_seconds": 146.5,
+  "median_first_edit_turn": 19.0,
+  "submitted_explicitly": 5,
+  "empty_patches": 19,
+  "tool_errors": {
+    "run_command:CommandError": 52,
+    "edit_file:FileEditError": 8
+  },
+  "failing_commands": {
+    "grep -n": 13,
+    "python3 -c": 8,
+    "grep -nE": 5,
+    "python3 -m": 4,
+    "read_file rich/cells.py": 3,
+    "read_file fastapi/params.py": 2,
+    "grep -rnE": 2,
+    "cat <<": 2,
+    "read_file -n": 2,
+    "read_file fastapi/routing.py": 1,
+    "grep -r": 1,
+    "read_file docs_src/handling_errors/tutorial004.py": 1
+  },
+  "test_envs": {
+    "unknown": 19,
+    "cd8edd2480d890f5": 4,
+    "01e9b61bd411ac3d": 2,
+    "4352d33e65d29c27": 2,
+    "d701d52285d2e297": 2,
+    "a90fce46fa6a543f": 1
+  },
+  "end_reasons": {
+    "tool-call_budget_exhausted": 16,
+    "time_budget_exhausted": 9,
+    "submit_patch": 5
+  },
+  "sim": null,
+  "eval_set": "experiments/eval_sets/set30_a.json",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

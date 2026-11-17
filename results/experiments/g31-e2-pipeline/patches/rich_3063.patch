@@ -1,0 +1,19 @@
+diff --git a/reproduce_issue.py b/reproduce_issue.py
+new file mode 100644
+index 00000000..221077da
+--- /dev/null
++++ b/reproduce_issue.py
+@@ -0,0 +1,13 @@
++from rich.markup import _parse
++
++def test(text):
++    print(f"Input: {repr(text)}")
++    print(f"Output: {list(_parse(text))}")
++    print("-" * 20)
++
++test("test\")
++test("test\\")
++test("test\\\")
++test("test\[bold]")
++test("test\[")
++test("test\[bold")

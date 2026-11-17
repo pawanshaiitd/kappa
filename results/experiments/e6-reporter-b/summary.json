@@ -1,0 +1,110 @@
+{
+  "name": "e6-reporter-b",
+  "variant": [
+    "baseline"
+  ],
+  "projection": {
+    "simulated_clock": true,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 161.8,
+    "task_seconds_p90": 186.2,
+    "task_seconds_max": 208.0,
+    "notebook_hours": {
+      "129": 8.2,
+      "200": 12.6,
+      "300": 18.7
+    }
+  },
+  "phase_medians": {
+    "locator": {
+      "llm_calls": 10.0,
+      "tool_calls": 8.5,
+      "prompt_tokens": 50211.0,
+      "output_tokens": 2981.5
+    },
+    "reporter": {
+      "llm_calls": 1.0,
+      "tool_calls": 0.0,
+      "prompt_tokens": 7880.5,
+      "output_tokens": 103.5
+    },
+    "fixer": {
+      "llm_calls": 6.5,
+      "tool_calls": 6.0,
+      "prompt_tokens": 20125.0,
+      "output_tokens": 2313.0
+    },
+    "verifier": {
+      "llm_calls": 4,
+      "tool_calls": 3,
+      "prompt_tokens": 11945,
+      "output_tokens": 1200
+    }
+  },
+  "median_prompt_tokens_max": 9316.5,
+  "max_prompt_tokens": 15571,
+  "median_output_tokens": 7035.0,
+  "compactions": 5,
+  "agent_envs": {
+    "cd8edd2480d890f5": 12,
+    "570f643d3542f861": 1,
+    "e557f7f9d9cea265": 1,
+    "b9a2f84bf6da3405": 1,
+    "e6d243e69e171e4a": 1,
+    "4f1dee1a877173f8": 1,
+    "4352d33e65d29c27": 2,
+    "d701d52285d2e297": 4,
+    "a90fce46fa6a543f": 7
+  },
+  "tasks": 30,
+  "resolved": 6,
+  "resolution_rate": 0.2,
+  "failure_buckets": {
+    "tests_failed": 11,
+    "no_edit_attempted": 13,
+    "resolved": 6
+  },
+  "median_turns": 24.0,
+  "median_tool_calls": 21.0,
+  "median_seconds": 173.4,
+  "median_first_edit_turn": 18,
+  "submitted_explicitly": 2,
+  "empty_patches": 13,
+  "tool_errors": {
+    "run_command:CommandError": 22,
+    "edit_file:FileEditError": 22,
+    "get_code_neighbors:NotIndexed": 1,
+    "edit_file:UnknownTool": 1
+  },
+  "failing_commands": {
+    "grep -n": 9,
+    "python3 -m": 7,
+    "readfile fastapi/dependencies/utils.py": 2,
+    "grep -r": 1,
+    "ls tests/test_dependencies.py": 1,
+    "grep -rn": 1,
+    "sed -i": 1
+  },
+  "test_envs": {
+    "cd8edd2480d890f5": 5,
+    "unknown": 13,
+    "e557f7f9d9cea265": 1,
+    "e6d243e69e171e4a": 1,
+    "4352d33e65d29c27": 2,
+    "d701d52285d2e297": 3,
+    "a90fce46fa6a543f": 5
+  },
+  "end_reasons": {
+    "tool-call_budget_exhausted": 14,
+    "time_budget_exhausted": 13,
+    "submit_patch": 2,
+    "max_turns": 1
+  },
+  "sim": {
+    "prefill_tps": 2000.0,
+    "decode_tps": 45.0
+  },
+  "eval_set": "experiments/eval_sets/set30_b.json",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

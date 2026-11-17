@@ -1,0 +1,10 @@
+# Reporter step: one short reply, no tools. Thinking is off so the report cannot be cut off
+# by a runaway reasoning block; 400 tokens holds the six-line report with room to spare.
+temperature: 0.3
+top_p: 0.95
+top_k: 64
+max_output_tokens: 400
+seed: 20261117
+thinking_config:
+  thinking_budget: 0
+  include_thoughts: false

@@ -1,0 +1,22 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index af2bed9a..ed2ec884 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -44,7 +44,7 @@ from fastapi._compat import (
+     serialize_sequence_value,
+     value_is_sequence,
+ )
+-from fastapi._compat.shared import annotation_is_pydantic_v1
++
+ from fastapi.background import BackgroundTasks
+ from fastapi.concurrency import (
+     asynccontextmanager,
+@@ -72,7 +72,7 @@ from starlette.responses import Response
+ from starlette.websockets import WebSocket
+ from typing_extensions import Literal, get_args, get_origin
+ 
+-from .. import temp_pydantic_v1_params
++
+ 
+ multipart_not_installed_error = (
+     'Form data requires "python-multipart" to be installed. \n'

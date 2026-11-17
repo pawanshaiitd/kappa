@@ -1,0 +1,88 @@
+{
+  "name": "smoke-pipeline-t0.6",
+  "variant": [
+    "temperature=0.6"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 100.0,
+    "task_seconds_p90": 140.4,
+    "task_seconds_max": 140.4,
+    "notebook_hours": {
+      "129": 6.0,
+      "200": 9.1,
+      "300": 13.6
+    }
+  },
+  "phase_medians": {
+    "locator": {
+      "llm_calls": 10.0,
+      "tool_calls": 8.5,
+      "prompt_tokens": 55214.5,
+      "output_tokens": 4215.0
+    },
+    "fixer": {
+      "llm_calls": 7,
+      "tool_calls": 5,
+      "prompt_tokens": 48588,
+      "output_tokens": 1662
+    },
+    "verifier": {
+      "llm_calls": 10.5,
+      "tool_calls": 10.0,
+      "prompt_tokens": 39222.0,
+      "output_tokens": 2530.0
+    }
+  },
+  "median_prompt_tokens_max": 11726.5,
+  "max_prompt_tokens": 14804,
+  "median_output_tokens": 5759.0,
+  "compactions": 0,
+  "agent_envs": {
+    "4352d33e65d29c27": 1,
+    "01e9b61bd411ac3d": 1,
+    "a90fce46fa6a543f": 1,
+    "cd8edd2480d890f5": 1
+  },
+  "tasks": 4,
+  "resolved": 2,
+  "resolution_rate": 0.5,
+  "failure_buckets": {
+    "resolved": 2,
+    "no_edit_attempted": 1,
+    "tests_failed": 1
+  },
+  "median_turns": 23.5,
+  "median_tool_calls": 21.5,
+  "median_seconds": 91.4,
+  "median_first_edit_turn": 21,
+  "submitted_explicitly": 1,
+  "empty_patches": 1,
+  "tool_errors": {
+    "run_command:CommandError": 8,
+    "edit_file:FileEditError": 1
+  },
+  "failing_commands": {
+    "sed -i": 2,
+    "read_file <": 2,
+    "grep -rn": 2,
+    "read_file fastapi/dependencies/utils.py": 1,
+    "grep -n": 1
+  },
+  "test_envs": {
+    "4352d33e65d29c27": 1,
+    "01e9b61bd411ac3d": 1,
+    "unknown": 1,
+    "cd8edd2480d890f5": 1
+  },
+  "end_reasons": {
+    "max_turns": 1,
+    "submit_patch": 1,
+    "tool-call_budget_exhausted": 2
+  },
+  "sim": null,
+  "eval_set": "explicit-ids",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

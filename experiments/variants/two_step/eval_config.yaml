@@ -1,0 +1,17 @@
+# Per-task budgets for Stage 1 inference.
+#
+# The notebook limit is 18 h = 1080 min and tasks run one after another, so the cap per task
+# is what decides whether the run finishes at all:
+#     tasks x (max_time_minutes + ~1 min setup) + ~15 min start-up  must stay under 1080.
+# At 3 minutes that holds for up to ~265 tasks even if every task hits the cap; the pipeline is
+# built to finish in about 2. Re-derive this number from a measured run before raising it
+# (scripts/run_experiment.py prints the projection).
+#
+#   max_tool_calls  - locator 7 + fixer 6 + verifier 7, plus two spare.
+#   max_turns       - one model request per tool call plus one closing reply per step.
+#   timeout_seconds - a single targeted test file finishes well inside 45 s.
+evaluation:
+  timeout_seconds: 45
+  max_tool_calls: 22
+  max_time_minutes: 3
+  max_turns: 26

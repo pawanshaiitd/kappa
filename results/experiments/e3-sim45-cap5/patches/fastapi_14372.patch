@@ -1,0 +1,21 @@
+diff --git a/fastapi/params.py b/fastapi/params.py
+index 6a58d580..a9013725 100644
+--- a/fastapi/params.py
++++ b/fastapi/params.py
+@@ -762,13 +762,15 @@ class File(Form):  # type: ignore[misc]
+         )
+ 
+ 
+-@dataclass
++@dataclass(frozen=True)
+ class Depends:
+     dependency: Optional[Callable[..., Any]] = None
+     use_cache: bool = True
+     scope: Union[Literal["function", "request"], None] = None
+ 
+ 
++
++
+ @dataclass
+ class Security(Depends):
+     scopes: Optional[Sequence[str]] = None

@@ -1,0 +1,191 @@
+[1mexperiment:[0m e3-pipeline-sim   [1mvariant:[0m baseline
+[1mmodel:[0m google/gemma-4-12B-it-qat-w4a16-ct via openai   [1mtasks:[0m 30 of 30   [1mclock:[0m simulated {"prefill_tps": 1000.0, "decode_tps": 20.0}
+[1mendpoint:[0m http://10.120.0.183:8000/v1
+
+[93mtime budget exhausted - ending session.[0m
+[1/30] fastapi_14186  -> [91mno_edit_attempted[0m  turns=16 calls=15 patch=0B 181.1s peak_prompt=15335 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[2/30] fastapi_14258  -> [91mno_edit_attempted[0m  turns=18 calls=17 patch=0B 181.1s peak_prompt=13355 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[3/30] fastapi_13786  -> [91mno_edit_attempted[0m  turns=12 calls=11 patch=0B 187.2s peak_prompt=9174 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[4/30] fastapi_11194  -> [91mno_edit_attempted[0m  turns=21 calls=20 patch=0B 229.4s peak_prompt=11398 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[5/30] fastapi_14262  -> [91mno_edit_attempted[0m  turns=17 calls=16 patch=0B 209.0s peak_prompt=10721 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[6/30] fastapi_14301  -> [91mno_edit_attempted[0m  turns=14 calls=13 patch=0B 228.9s peak_prompt=5170 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 2128 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_forms_single_model.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+
+==================================== ERRORS ====================================
+______________ ERROR collecting tests/test_forms_single_model.py _______________
+/Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+/Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests/test_forms_single_model.py:4: in <module>
+    from fastapi import FastAPI, Form
+fastapi/__init__.py:7: in <module>
+    from .applications import FastAPI as FastAPI
+fastapi/applications.py:17: in <module>
+    from fastapi import routing
+fastapi/routing.py:39: in <module>
+    from fastapi.dependencies.u
+[Verification Result] Resolved: False (Exit Code: 2)
+[7/30] fastapi_14303  -> [91mpatch_breaks_import[0m  turns=15 calls=14 patch=2128B 204.4s peak_prompt=9580 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[8/30] fastapi_14306  -> [91mno_edit_attempted[0m  turns=15 calls=14 patch=0B 184.4s peak_prompt=9482 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[9/30] fastapi_14372  -> [91mno_edit_attempted[0m  turns=12 calls=11 patch=0B 183.0s peak_prompt=6326 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[10/30] fastapi_14430  -> [91mno_edit_attempted[0m  turns=19 calls=18 patch=0B 188.9s peak_prompt=8890 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[11/30] fastapi_14487  -> [91mno_edit_attempted[0m  turns=20 calls=19 patch=0B 193.4s peak_prompt=8971 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[12/30] fastapi_14360  -> [91mno_edit_attempted[0m  turns=15 calls=14 patch=0B 275.2s peak_prompt=6511 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[13/30] fastapi_15280  -> [91mno_edit_attempted[0m  turns=17 calls=16 patch=0B 184.0s peak_prompt=13286 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[14/30] fastapi_14609  -> [91mno_edit_attempted[0m  turns=17 calls=16 patch=0B 257.2s peak_prompt=15394 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[15/30] fastapi_9555  -> [91mno_edit_attempted[0m  turns=10 calls=9 patch=0B 180.4s peak_prompt=7786 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[16/30] fastapi_9753  -> [91mno_edit_attempted[0m  turns=15 calls=14 patch=0B 205.5s peak_prompt=8783 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 522 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_adapters.py -q -W default  [env 4352d33e65d29c27]
+[Verification Test Output]:
+.                                                                        [100%]
+1 passed in 0.01s
+
+[2026-11-17 13:22:34,146] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[17/30] requests_7315  -> [92mRESOLVED[0m  turns=13 calls=11 patch=522B 180.7s peak_prompt=6339 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 692 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+
+[93mtool-call budget exhausted - ending session.[0m
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_utils.py -q -W default  [env 4352d33e65d29c27]
+[18/30] requests_7502  -> [91mno_edit_attempted[0m  turns=22 calls=22 patch=0B 164.9s peak_prompt=4575 end=tool-call_budget_exhausted
+[Verification Test Output]:
+..s..................................................................... [ 32%]
+........................................................................ [ 65%]
+...........................................................sssssssssss.. [ 98%]
+...s                                                                     [100%]
+=============================== warnings summary ===============================
+tests/test_utils.py::TestContentEncodingDetection::test_none
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta charset="UTF-8">]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta http-equiv="Content-type" content="text/html;charset=UTF-8">]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<?xml version="1.0" encoding="UTF-8"?>]
+tests/test_utils.py::TestContentEncodingDetection::test_precedence
+  /var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/swegemma_verif_requests_7309_tfnxiky0/workspace/src/requests/utils.py:484: DeprecationWarning: In requests 3.0, get_encodings_from_content will be removed. For more information, please see the discussion on issue #2266. (This warning should only appear once.)
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+207 passed, 13 skipped, 6 warnings in 0.14s
+
+[2026-11-17 13:22:43,092] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[19/30] requests_7309  -> [92mRESOLVED[0m  turns=13 calls=10 patch=692B 200.2s peak_prompt=3466 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[20/30] rich_2725  -> [91mno_edit_attempted[0m  turns=10 calls=8 patch=0B 183.7s peak_prompt=6094 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[21/30] rich_2943  -> [91mno_edit_attempted[0m  turns=14 calls=12 patch=0B 199.1s peak_prompt=5293 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[22/30] rich_3052  -> [91mno_edit_attempted[0m  turns=19 calls=18 patch=0B 205.3s peak_prompt=11146 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[23/30] rich_3063  -> [91mno_edit_attempted[0m  turns=13 calls=11 patch=0B 277.0s peak_prompt=6760 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[24/30] rich_3105  -> [91mno_edit_attempted[0m  turns=11 calls=10 patch=0B 263.9s peak_prompt=18984 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[25/30] rich_3894  -> [91mno_edit_attempted[0m  turns=12 calls=11 patch=0B 203.7s peak_prompt=8202 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[26/30] rich_3486  -> [91mno_edit_attempted[0m  turns=15 calls=14 patch=0B 273.3s peak_prompt=9651 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[27/30] rich_3930  -> [91mno_edit_attempted[0m  turns=15 calls=14 patch=0B 184.6s peak_prompt=10722 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[28/30] rich_4070  -> [91mno_edit_attempted[0m  turns=7 calls=6 patch=0B 190.0s peak_prompt=8777 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[29/30] rich_4076  -> [91mno_edit_attempted[0m  turns=14 calls=13 patch=0B 188.8s peak_prompt=5727 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[30/30] rich_4077  -> [91mno_edit_attempted[0m  turns=11 calls=10 patch=0B 227.4s peak_prompt=7731 end=time_budget_exhausted
+
+========================================================================
+[1m  e3-pipeline-sim[0m   variant: baseline
+========================================================================
+  resolution rate : [92m0.067[0m  (2/30)
+  failure buckets : {'no_edit_attempted': 27, 'patch_breaks_import': 1, 'resolved': 2}
+  end reasons     : {'time_budget_exhausted': 29, 'tool-call_budget_exhausted': 1}
+  medians         : turns=15.0 calls=14.0 secs=196.2 first_edit_turn=8.5
+  empty patches   : 27   explicit submits: 0
+  tool errors     : {'run_command:CommandError': 25}
+  failing commands: {'grep -n': 10, 'sed -i': 6, 'python3 -c': 4, 'read_file fastapi/params.py': 1, 'read_file fastapi/_compat/v1.py': 1, 'read_file fastapi/dependencies/utils.py': 1, 'find src/requests': 1, 'read_file rich/markup.py': 1}
+  context         : median peak prompt=8836.5 tok  max=18984 tok  compactions=4
+  phase locator     : llm_calls=15  tool_calls=14  prompt_tokens=79383.5  output_tokens=3596.5
+  phase fixer       : llm_calls=5  tool_calls=4  prompt_tokens=12030  output_tokens=1438
+  phase verifier    : llm_calls=5  tool_calls=5  prompt_tokens=10016  output_tokens=939
+  time per task   : mean=207.2s p90=263.9s max=277.0s  (simulated Gemma clock)
+  notebook (18 h) : 129 tasks: [92m9.8 h[0m   200 tasks: [91m15.1 h[0m   300 tasks: [91m22.5 h[0m   [+60s setup per task]
+
+Artifacts: /Users/pawankumar.s/Documents/kappa/results/experiments/e3-pipeline-sim

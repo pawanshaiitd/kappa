@@ -1,0 +1,69 @@
+{
+  "name": "smoke-lean",
+  "variant": [
+    "baseline"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 40.2,
+    "task_seconds_p90": 62.4,
+    "task_seconds_max": 62.4,
+    "notebook_hours": {
+      "129": 3.8,
+      "200": 5.8,
+      "300": 8.6
+    }
+  },
+  "phase_medians": {
+    "swe_agent": {
+      "llm_calls": 22.5,
+      "tool_calls": 22.0,
+      "prompt_tokens": 121356.0,
+      "output_tokens": 2277.5
+    }
+  },
+  "median_prompt_tokens_max": 7512.0,
+  "max_prompt_tokens": 10305,
+  "median_output_tokens": 2277.5,
+  "compactions": 0,
+  "agent_envs": {
+    "4352d33e65d29c27": 1,
+    "01e9b61bd411ac3d": 1,
+    "a90fce46fa6a543f": 1,
+    "cd8edd2480d890f5": 1
+  },
+  "tasks": 4,
+  "resolved": 0,
+  "resolution_rate": 0.0,
+  "failure_buckets": {
+    "no_edit_attempted": 4
+  },
+  "median_turns": 22.5,
+  "median_tool_calls": 22.0,
+  "median_seconds": 38.8,
+  "median_first_edit_turn": null,
+  "submitted_explicitly": 0,
+  "empty_patches": 4,
+  "tool_errors": {
+    "run_command:CommandError": 11
+  },
+  "failing_commands": {
+    "read_file src/requests/utils.py": 5,
+    "grep -n": 2,
+    "sed -i": 1,
+    "read_file fastapi/dependencies/utils.py": 1,
+    "read_file --filepath": 1,
+    "read_file rich/file_proxy.py": 1
+  },
+  "test_envs": {
+    "unknown": 4
+  },
+  "end_reasons": {
+    "tool-call_budget_exhausted": 4
+  },
+  "sim": null,
+  "eval_set": "explicit-ids",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

@@ -1,0 +1,5 @@
+2026-11-17 13:03:15 === 31B suite: model=google/gemma-4-31B-it-qat-w4a16-ct endpoint=http://10.120.12.55:8000/v1 set=experiments/eval_sets/set30_a.json workers=4
+2026-11-17 13:03:55 probe written to results/logs/g31-probe.json
+2026-11-17 13:03:55 START g31-e2-pipeline  args: --max-time-minutes 30
+2026-11-17 15:13:24 END   g31-e2-pipeline  exit=0
+2026-11-17 15:13:24 START g31-e2-lean  args: --submission-dir sample_submission_lean --max-time-minutes 30

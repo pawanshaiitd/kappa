@@ -1,0 +1,22 @@
+diff --git a/fastapi/openapi/utils.py b/fastapi/openapi/utils.py
+index e7e6da2f..8cca4bda 100644
+--- a/fastapi/openapi/utils.py
++++ b/fastapi/openapi/utils.py
+@@ -90,11 +90,12 @@ def get_openapi_security_definitions(
+         security_name = security_requirement.security_scheme.scheme_name
+         security_definitions[security_name] = security_definition
+         # Merge scopes for the same security scheme
+-        if security_name not in operation_security_dict:
+-            operation_security_dict[security_name] = []
+-        for scope in security_requirement.scopes or []:
+-            if scope not in operation_security_dict[security_name]:
+-                operation_security_dict[security_name].append(scope)
++        if security_requirement.scopes:
++            if security_name not in operation_security_dict:
++                operation_security_dict[security_name] = []
++            for scope in security_requirement.scopes:
++                if scope not in operation_security_dict[security_name]:
++                    operation_security_dict[security_name].append(scope)
+     operation_security = [
+         {name: scopes} for name, scopes in operation_security_dict.items()
+     ]

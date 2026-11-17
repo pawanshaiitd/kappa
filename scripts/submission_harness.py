@@ -45,6 +45,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -70,9 +71,14 @@ from scripts.harness_tools import (  # noqa: E402
     strip_protected_files_from_patch,
 )
 from scripts.run_gemini_benchmark import (  # noqa: E402
+    _pythonpath_for,
     extract_snapshot_to_dir,
     verify_agent_patch,
 )
+from scripts.test_envs import resolve_pytest  # noqa: E402
+
+# Where real Gemma 4 is served. Override with --api-base or SWE_API_BASE.
+DEFAULT_API_BASE = "http://10.120.12.55:8000/v1"
 
 ALLOWED_MODEL_NAMES = {
     "gemma-4-31b-it-qat-w4a16-ct",
@@ -193,17 +199,66 @@ def parse_skill_md(skill_dir: Path) -> Dict[str, Any]:
     }
 
 
+AGENT_CLASSES = ("LlmAgent", "SequentialAgent", "LoopAgent", "ParallelAgent")
+WORKFLOW_CLASSES = ("SequentialAgent", "LoopAgent", "ParallelAgent")
+
+# ADK substitutes {name} / {name?} in an instruction from session.state. A name that is not a valid
+# identifier is left alone; a valid one that is missing raises KeyError unless it ends in "?".
+STATE_KEY_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*(?::[A-Za-z_][A-Za-z0-9_]*)?)(\?)?\}")
+HARNESS_STATE_KEYS = {"problem_description", "hints"}
+
+
+class StateKeyError(Exception):
+    """An instruction references a session-state key that is not set (ADK raises KeyError)."""
+
+
+def render_instruction(template: str, state: Dict[str, Any]) -> str:
+    def sub(m: "re.Match[str]") -> str:
+        key, optional = m.group(1), m.group(2)
+        if key in state:
+            return str(state[key])
+        if optional:
+            return ""
+        raise StateKeyError(f"instruction references missing session-state key {{{key}}}")
+
+    return STATE_KEY_RE.sub(sub, template)
+
+
 class AgentSpec:
     def __init__(self, cfg: Dict[str, Any], root: Path, source: Path):
         self.source = source
         self.name: str = cfg.get("name") or source.stem
+        self.agent_class: str = cfg.get("agent_class") or "LlmAgent"
+        if self.agent_class not in AGENT_CLASSES:
+            raise SubmissionError(f"{source}: unsupported agent_class {self.agent_class!r}")
         self.description: str = cfg.get("description", "")
         self.model: Optional[str] = cfg.get("model")
         self.instruction: str = cfg.get("instruction", "") or ""
         self.gen_cfg: Dict[str, Any] = cfg.get("generate_content_config") or {}
+        self.output_key: Optional[str] = cfg.get("output_key")
+        self.include_contents: str = cfg.get("include_contents") or "default"
+        if self.include_contents not in ("default", "none"):
+            raise SubmissionError(f"{source}: include_contents must be 'default' or 'none'")
+        self.max_iterations: int = int(cfg.get("max_iterations") or 500)
+        if not 1 <= self.max_iterations <= 500:
+            raise SubmissionError(f"{source}: max_iterations must be within 1..500")
         self.tool_names: List[str] = []
         self.agent_tools: List["AgentSpec"] = []
+        self.sub_agents: List["AgentSpec"] = []
         self.skills: List[Dict[str, Any]] = []
+
+        for entry in cfg.get("sub_agents") or []:
+            cp = entry.get("config_path") if isinstance(entry, dict) else None
+            if not cp:
+                raise SubmissionError(f"{source}: sub_agents entry needs config_path: {entry!r}")
+            if cp.startswith("/") or ".." in Path(cp).parts:
+                raise SubmissionError(f"{source}: sub_agents path rejected: {cp}")
+            sub_path = (source.parent / cp).resolve()
+            if not str(sub_path).startswith(str(root.resolve())) or not sub_path.exists():
+                raise SubmissionError(f"{source}: sub_agent not found: {cp}")
+            self.sub_agents.append(
+                AgentSpec(load_yaml_with_includes(sub_path, root), root, sub_path)
+            )
 
         for entry in cfg.get("tools") or []:
             if isinstance(entry, str):
@@ -229,11 +284,22 @@ class AgentSpec:
                 raise SubmissionError(f"{source}: skill path invalid: {rel}")
             self.skills.append(parse_skill_md(sd))
 
+    @property
+    def is_workflow(self) -> bool:
+        return self.agent_class in WORKFLOW_CLASSES
+
     def all_agents(self) -> List["AgentSpec"]:
         out = [self]
-        for a in self.agent_tools:
+        for a in self.sub_agents + self.agent_tools:
             out.extend(a.all_agents())
         return out
+
+    def llm_agents(self) -> List["AgentSpec"]:
+        return [a for a in self.all_agents() if not a.is_workflow]
+
+    def state_keys_used(self) -> List[Tuple[str, bool]]:
+        """(key, optional) pairs referenced by this agent's instruction."""
+        return [(m.group(1), bool(m.group(2))) for m in STATE_KEY_RE.finditer(self.instruction)]
 
 
 class Submission:
@@ -272,15 +338,58 @@ class Submission:
 
         models = {a.model for a in agents if a.model}
         for a in agents:
-            if not a.model:
+            if not a.model and not a.is_workflow:
                 problems.append(f"agent {a.name} ({a.source.name}) declares no model")
+            if a.is_workflow and not a.sub_agents:
+                problems.append(f"{a.agent_class} {a.name} has no sub_agents")
+        # The scorer's discovery also reads standalone agent YAMLs that nothing references, so a
+        # leftover sub-agent file declaring another model fails the single-model rule.
+        for y in sorted(list(self.dir.rglob("*.yaml")) + list(self.dir.rglob("*.yml"))):
+            try:
+                txt = y.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for m in re.finditer(r"(?m)^model:\s*['\"]?([^\s'\"#]+)", txt):
+                if m.group(1) not in models:
+                    models.add(m.group(1))
+                    problems.append(
+                        f"unreferenced YAML {y.relative_to(self.dir)} declares model {m.group(1)!r}"
+                    )
         if len(models) > 1:
             problems.append(f"multiple base models declared: {sorted(models)}")
         for m in models:
             if m.split("/")[-1] not in ALLOWED_MODEL_NAMES:
                 problems.append(f"model {m!r} is not in ALLOWED_MODEL_NAMES")
 
+        names = [a.name for a in agents]
+        for n in sorted({n for n in names if names.count(n) > 1}):
+            problems.append(f"duplicate agent name {n!r}")
+
+        # Session-state templating. Keys set by the harness, plus every output_key in the tree.
+        # A required key that may be unset at run time makes ADK raise KeyError mid-task.
+        produced = {a.output_key for a in agents if a.output_key}
         for a in agents:
+            for key, optional in a.state_keys_used():
+                if key == "problem_description":
+                    continue
+                if key == "hints" and not optional:
+                    problems.append(
+                        f"agent {a.name}: {{hints}} is unset when a task has no hints; use {{hints?}}"
+                    )
+                elif key in produced and not optional:
+                    problems.append(
+                        f"agent {a.name}: {{{key}}} is only set if the producing agent ends with "
+                        f"a text response; use {{{key}?}}"
+                    )
+                elif key not in produced and key not in HARNESS_STATE_KEYS:
+                    problems.append(
+                        f"agent {a.name}: {{{key}}} is not a session-state key "
+                        "(ADK templates braces; remove them or add an output_key)"
+                    )
+
+        for a in agents:
+            if a.is_workflow:
+                continue
             if not a.instruction.strip():
                 problems.append(f"agent {a.name} has an empty instruction")
             g = a.gen_cfg or {}
@@ -327,9 +436,23 @@ class Submission:
         lines = [f"root: {self.root_path.name}"]
 
         def walk(a: AgentSpec, indent: str):
+            if a.is_workflow:
+                extra = f" max_iterations={a.max_iterations}" if a.agent_class == "LoopAgent" else ""
+                lines.append(f"{indent}{a.name}  <{a.agent_class}>{extra}")
+                for sub in a.sub_agents:
+                    walk(sub, indent + "    ")
+                return
+            flags = []
+            if a.include_contents != "default":
+                flags.append(f"include_contents={a.include_contents}")
+            if a.output_key:
+                flags.append(f"output_key={a.output_key}")
             lines.append(
                 f"{indent}{a.name}  [{a.model}]  instruction={len(a.instruction)} chars"
+                + (f"  {' '.join(flags)}" if flags else "")
             )
+            for sub in a.sub_agents:
+                walk(sub, indent + "    ")
             if a.tool_names:
                 lines.append(f"{indent}  tools: {', '.join(a.tool_names)}")
             if a.skills:
@@ -485,11 +608,78 @@ FREE_TOOLS = {"submit_patch", "get_status"}
 # Sandbox + tool implementations
 # --------------------------------------------------------------------------------------
 
+MAX_MODEL_LEN = 32768          # vLLM max_model_len on the scorer
+COMPACTION_TOKEN_THRESHOLD = 14336   # EventsCompactionConfig.token_threshold
+COMPACTION_RETENTION = 5       # EventsCompactionConfig.event_retention_size
+COMPACTION_SUMMARY_TOKENS = 400
+
+# Assumed serving speeds on 4x L4 (tokens/second). These are placeholders until measured with
+# --probe-endpoint against a real vLLM server; they are deliberately on the slow side.
+SIM_PRESETS: Dict[str, Dict[str, float]] = {
+    "gemma12b": {"prefill_tps": 1000.0, "decode_tps": 20.0},
+    "gemma31b": {"prefill_tps": 500.0, "decode_tps": 9.0},
+    "gemma-e4b": {"prefill_tps": 2500.0, "decode_tps": 45.0},
+}
+
+
+def estimate_tokens(obj: Any) -> int:
+    """Conservative token count for text or a JSON-able payload (3.0 characters per token).
+
+    Measured against the Gemma 4 tokenizer on vLLM: Python source 3.40, Markdown prompts 3.59,
+    JSON tool results 3.09 characters per token. 3.0 errs on the side of over-counting, so the
+    32,768-token overflow check and the compaction trigger fire no later than on the scorer.
+    """
+    if not isinstance(obj, str):
+        obj = json.dumps(obj, ensure_ascii=False, default=str)
+    return int(len(obj) / 3.0) + 1
+
+
+def make_sim(args: Any) -> Optional[Dict[str, float]]:
+    """Build the simulated-clock config from --sim / --sim-prefill-tps / --sim-decode-tps."""
+    sim: Dict[str, float] = {}
+    preset = getattr(args, "sim", None) or os.environ.get("SWE_SIM")
+    if preset:
+        if preset not in SIM_PRESETS:
+            raise SystemExit(f"unknown --sim preset {preset!r}; choose from {sorted(SIM_PRESETS)}")
+        sim.update(SIM_PRESETS[preset])
+    if getattr(args, "sim_prefill_tps", None):
+        sim["prefill_tps"] = float(args.sim_prefill_tps)
+    if getattr(args, "sim_decode_tps", None):
+        sim["decode_tps"] = float(args.sim_decode_tps)
+    if not sim:
+        return None
+    sim.setdefault("prefill_tps", 1000.0)
+    sim.setdefault("decode_tps", 20.0)
+    return sim
+
+
 class Sandbox:
-    def __init__(self, workspace: Path, task: Dict[str, Any], budget: Dict[str, Any]):
+    def __init__(self, workspace: Path, task: Dict[str, Any], budget: Dict[str, Any],
+                 sim: Optional[Dict[str, float]] = None, agent_env: str = "auto"):
         self.ws = workspace.resolve()
         self.task = task
         self.budget = budget
+        # Session state as the real harness seeds it: `hints` only exists when non-empty.
+        self.state: Dict[str, Any] = {"problem_description": task.get("problem_statement", "")}
+        if (task.get("hints_text") or "").strip():
+            self.state["hints"] = task["hints_text"].strip()
+        # Simulated Gemma clock. With `sim` set, elapsed time is projected from token counts so
+        # that max_time_minutes binds the way it will on 4x L4 instead of at API speed.
+        self.sim = sim
+        self.sim_clock = 0.0
+        self.llm_calls = 0
+        self.prompt_tokens_total = 0
+        self.output_tokens_total = 0
+        self.prompt_tokens_max = 0
+        self.compactions = 0
+        self.context_overflow = False
+        self.phase_stats: Dict[str, Dict[str, int]] = {}
+        self.trace: List[Dict[str, Any]] = []
+        # Per-task scratch dir standing in for the container's /tmp, so scratch files and notes
+        # from one task are never visible to the next.
+        self.tmp = self.ws.parent / "tmp"
+        self.tmp.mkdir(parents=True, exist_ok=True)
+        self.env = self._build_env(agent_env)
         self.tool_calls_used = 0
         self.tool_uses: "collections.Counter[str]" = collections.Counter()
         self.tool_errors: "collections.Counter[str]" = collections.Counter()
@@ -500,13 +690,56 @@ class Sandbox:
         self.patch_submitted = False
         self.submitted_patch = ""
         self.start_time = time.time()
+        self.max_turns = int(budget.get("max_turns") or 500)
+        self.first_edit_call: Optional[int] = None
         self.graph: Optional[CodeGraph] = None
         self.emb: Optional[CodeEmbeddingIndex] = None
         self._load_code_intel()
 
     # -- budget -------------------------------------------------------------------
+    def _build_env(self, mode: str) -> Dict[str, str]:
+        """Environment for run_command, matching Container A as closely as a host can.
+
+        The real sandbox has the repo importable and its test dependencies installed. Running
+        commands with the harness's own interpreter instead made `python3 /tmp/repro.py` and
+        `python -m pytest` fail for reasons the agent could not fix, and leaked host paths.
+        """
+        env = dict(os.environ)
+        env["TMPDIR"] = str(self.tmp)
+        env["TEST_TMPDIR"] = str(self.tmp)
+        env["PYTHONPATH"] = _pythonpath_for(self.ws)
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        env.pop("VIRTUAL_ENV", None)
+        self.agent_env_key = "host"
+        if mode == "host":
+            return env
+        try:
+            info = resolve_pytest(self.ws, self.task.get("repo", ""), mode=mode, verbose=False)
+        except Exception as e:  # noqa: BLE001 - a broken env must not lose the task
+            print(f"{C_YELLOW}[agent-env] could not resolve test env: {e}{C_RESET}")
+            return env
+        self.agent_env_key = info.get("env_key", "unknown")
+        bin_dir = Path(info["pytest"]).parent if os.sep in str(info.get("pytest", "")) else None
+        if bin_dir and bin_dir.is_dir():
+            env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
+            if not (bin_dir / "python").exists() and (bin_dir / "python3").exists():
+                try:
+                    (bin_dir / "python").symlink_to(bin_dir / "python3")
+                except OSError:
+                    pass
+        return env
+
+    def _rewrite_paths(self, cmd: str) -> str:
+        cmd = cmd.replace("/workspace", str(self.ws))
+        return re.sub(r"(?<![\w./-])/tmp(?=/|\b)", str(self.tmp), cmd)
+
+    def advance_clock(self, seconds: float) -> None:
+        self.sim_clock += max(0.0, seconds)
+
     @property
     def elapsed(self) -> float:
+        if self.sim:
+            return self.sim_clock
         return time.time() - self.start_time
 
     @property
@@ -517,11 +750,13 @@ class Sandbox:
     def calls_remaining(self) -> int:
         return int(self.budget["max_tool_calls"]) - self.tool_calls_used
 
-    def budget_exhausted(self) -> Optional[str]:
+    def budget_exhausted(self, include_turns: bool = True) -> Optional[str]:
         if self.time_remaining <= 0:
             return "time budget exhausted"
         if self.calls_remaining <= 0:
             return "tool-call budget exhausted"
+        if include_turns and self.llm_calls >= self.max_turns:
+            return "max turns"
         return None
 
     def _load_code_intel(self) -> None:
@@ -582,7 +817,7 @@ class Sandbox:
     # -- tool dispatch ------------------------------------------------------------
     def call(self, name: str, args: Dict[str, Any], skills: Dict[str, Any]) -> Dict[str, Any]:
         if name not in FREE_TOOLS:
-            blocked = self.budget_exhausted()
+            blocked = self.budget_exhausted(include_turns=False)
             if blocked:
                 return {
                     "status": "error",
@@ -616,6 +851,8 @@ class Sandbox:
                 )
         elif name in ("edit_file", "write_file"):
             self.edits_landed += 1
+            if self.first_edit_call is None:
+                self.first_edit_call = self.llm_calls
         if (
             name not in FREE_TOOLS
             and int(self.budget["max_tool_calls"]) >= 20
@@ -698,21 +935,27 @@ class Sandbox:
                 return {"status": "ok", "filepath": fp, "size": len(body)}
 
             if name == "run_command":
-                cmd = str(args.get("command", "")).replace("/workspace", str(self.ws))
+                cmd = self._rewrite_paths(str(args.get("command", "")))
                 timeout = min(
                     int(self.budget["timeout_seconds"]), max(5, int(self.time_remaining))
                 )
+                t0 = time.perf_counter()
                 try:
                     proc = subprocess.run(
-                        cmd,
-                        shell=True,
+                        ["/bin/bash", "-c", cmd],
                         cwd=str(self.ws),
                         capture_output=True,
                         text=True,
+                        errors="replace",
                         timeout=timeout,
+                        env=self.env,
+                        stdin=subprocess.DEVNULL,
+                        start_new_session=True,
                     )
                 except subprocess.TimeoutExpired:
+                    self.advance_clock(timeout)
                     return _err("TimeoutExceeded", f"Command timed out after {timeout}s")
+                self.advance_clock(time.perf_counter() - t0)
                 if proc.returncode == 0:
                     return {
                         "status": "ok",
@@ -959,6 +1202,7 @@ class GeminiBackend(Backend):
             {},
         )
         cand = (data.get("candidates") or [{}])[0]
+        um = data.get("usageMetadata") or {}
         text_parts, calls = [], []
         for p in (cand.get("content") or {}).get("parts") or []:
             if "text" in p:
@@ -970,12 +1214,19 @@ class GeminiBackend(Backend):
             "text": "\n".join(t for t in text_parts if t.strip()),
             "tool_calls": calls,
             "finish_reason": cand.get("finishReason", ""),
-            "usage": data.get("usageMetadata", {}),
+            "usage": {
+                "prompt_tokens": um.get("promptTokenCount"),
+                "output_tokens": um.get("candidatesTokenCount"),
+                "thinking_tokens": um.get("thoughtsTokenCount") or 0,
+            },
         }
 
 
 class OpenAIBackend(Backend):
     """Any OpenAI-compatible /v1 endpoint: vLLM serving real Gemma 4, or LiteLLM."""
+
+    # Set SWE_OPENAI_PLAIN=1 for endpoints that reject vLLM-only fields (top_k, thinking).
+    plain_openai = bool(os.environ.get("SWE_OPENAI_PLAIN"))
 
     def generate(self, system, messages, tools, gen_cfg):
         msgs: List[Dict[str, Any]] = []
@@ -1014,14 +1265,21 @@ class OpenAIBackend(Backend):
         }
         if "top_p" in gen_cfg:
             payload["top_p"] = gen_cfg["top_p"]
+        if "top_k" in gen_cfg and not self.plain_openai:
+            payload["top_k"] = gen_cfg["top_k"]
         if "seed" in gen_cfg:
             payload["seed"] = gen_cfg["seed"]
+        # LiteLLM's `extra_body` is merged into the top level of the request, so over raw HTTP
+        # these fields belong at the top level. thinking_budget 0 must switch thinking off
+        # explicitly, otherwise the chat template's default applies.
         tcfg = gen_cfg.get("thinking_config") or {}
-        if tcfg.get("thinking_budget"):
-            payload["extra_body"] = {
-                "enable_thinking": True,
-                "thinking_token_budget": int(tcfg["thinking_budget"]),
-            }
+        if not self.plain_openai:
+            budget = tcfg.get("thinking_budget")
+            if budget is not None and int(budget) > 0:
+                payload["chat_template_kwargs"] = {"enable_thinking": True}
+                payload["thinking_token_budget"] = int(budget)
+            elif budget is not None or tcfg.get("include_thoughts") is False:
+                payload["chat_template_kwargs"] = {"enable_thinking": False}
         if tools:
             payload["tools"] = [
                 {
@@ -1050,12 +1308,65 @@ class OpenAIBackend(Backend):
             except json.JSONDecodeError:
                 args = {"_raw": fn.get("arguments")}
             calls.append({"id": tc.get("id") or fn.get("name"), "name": fn.get("name"), "args": args})
+        usage = data.get("usage") or {}
+        reasoning = msg.get("reasoning_content") or msg.get("reasoning") or ""
+        # vLLM's completion_tokens already includes reasoning tokens; split them out so the
+        # simulated clock does not count thinking twice.
+        details = usage.get("completion_tokens_details") or {}
+        thinking = details.get("reasoning_tokens")
+        if thinking is None:
+            thinking = estimate_tokens(reasoning) if reasoning else 0
+        completion = usage.get("completion_tokens")
+        visible = max(int(completion) - int(thinking), 0) if completion is not None else None
         return {
             "text": msg.get("content") or "",
             "tool_calls": calls,
             "finish_reason": choice.get("finish_reason", ""),
-            "usage": data.get("usage", {}),
+            "usage": {
+                "prompt_tokens": usage.get("prompt_tokens"),
+                "output_tokens": visible,
+                "thinking_tokens": int(thinking),
+            },
         }
+
+    def probe(self) -> Dict[str, Any]:
+        """Check the endpoint: list models, one tool-call round trip, measured speed."""
+        out: Dict[str, Any] = {"api_base": self.api_base, "model": self.model}
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        req = urllib.request.Request(f"{self.api_base}/models", headers=headers)
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            listed = json.loads(resp.read().decode("utf-8"))
+        out["models"] = [m.get("id") for m in listed.get("data") or []]
+        out["max_model_len"] = next(
+            (m.get("max_model_len") for m in listed.get("data") or [] if m.get("max_model_len")),
+            None,
+        )
+        tools = {"run_command": TOOL_SCHEMAS["run_command"]}
+        cfg = {"max_output_tokens": 256, "temperature": 0.0, "thinking_config": {"thinking_budget": 0}}
+        t0 = time.perf_counter()
+        r = self.generate(
+            "You are a coding agent. Always act by calling a tool.",
+            [{"role": "user", "text": "List the files in the current directory."}],
+            tools, cfg,
+        )
+        out["tool_call_seconds"] = round(time.perf_counter() - t0, 2)
+        out["tool_call_parsed"] = bool(r["tool_calls"]) and r["tool_calls"][0]["name"] == "run_command"
+        out["tool_call_raw_text"] = r["text"][:200]
+        # Decode speed: a long free-text completion. Prefill speed: the same with a long prompt.
+        cfg = {"max_output_tokens": 400, "temperature": 0.0, "thinking_config": {"thinking_budget": 0}}
+        t0 = time.perf_counter()
+        r = self.generate("", [{"role": "user", "text": "Count from 1 to 300, one number per line."}], {}, cfg)
+        dt = time.perf_counter() - t0
+        n_out = r["usage"].get("output_tokens") or estimate_tokens(r["text"])
+        out["decode_tps"] = round(n_out / dt, 1) if dt > 0 else None
+        filler = "def f(x):\n    return x + 1\n" * 1500
+        cfg = {"max_output_tokens": 4, "temperature": 0.0, "thinking_config": {"thinking_budget": 0}}
+        t0 = time.perf_counter()
+        r = self.generate("", [{"role": "user", "text": filler + "\nReply with OK."}], {}, cfg)
+        dt = time.perf_counter() - t0
+        n_in = r["usage"].get("prompt_tokens") or estimate_tokens(filler)
+        out["prefill_tps"] = round(n_in / dt, 1) if dt > 0 else None
+        return out
 
 
 class MockBackend(Backend):
@@ -1130,16 +1441,22 @@ NUDGE_NORMAL = (
 
 
 class AgentSession:
-    """One agent (root or sub-agent) with its own history, tools and sampling config."""
+    """One LlmAgent bound to a conversation.
+
+    `events` is the session event list. Agents of a SequentialAgent/LoopAgent share one list, as
+    they share one ADK session; an AgentTool child gets its own. Each event carries its author so
+    that include_contents and the "For context: [agent] said" rewriting can be reproduced.
+    """
 
     def __init__(self, spec: AgentSpec, sandbox: Sandbox, backend: Backend,
-                 verbose: bool = True, depth: int = 0):
+                 verbose: bool = True, depth: int = 0,
+                 events: Optional[List[Dict[str, Any]]] = None):
         self.spec = spec
         self.sb = sandbox
         self.backend = backend
         self.verbose = verbose
         self.depth = depth
-        self.messages: List[Dict[str, Any]] = []
+        self.events: List[Dict[str, Any]] = events if events is not None else []
         self.skills = {s["name"]: s for s in spec.skills}
         self.tools: Dict[str, Dict[str, Any]] = {}
         for t in spec.tool_names:
@@ -1159,8 +1476,8 @@ class AgentSession:
                             "type": "string",
                             "description": (
                                 "Self-contained instructions. The sub-agent cannot see the "
-                                "problem statement or your findings, so include file paths, "
-                                "line numbers and exactly what you want returned."
+                                "conversation, so include file paths, line numbers and exactly "
+                                "what you want returned."
                             ),
                         }
                     },
@@ -1168,9 +1485,15 @@ class AgentSession:
                 },
             }
         self.sub_specs = {s.name: s for s in spec.agent_tools}
+        self._cached_tokens = 0  # prompt prefix the server already holds for this agent
+
+    # Kept for the REPL and older callers, which append {"role": "user", "text": ...} directly.
+    @property
+    def messages(self) -> List[Dict[str, Any]]:
+        return self.events
 
     def system_instruction(self) -> str:
-        parts = [self.spec.instruction]
+        parts = [render_instruction(self.spec.instruction, self.sb.state)]
         if self.skills:
             lines = ["", "## Available Skills", "Call load_skill(skill_name) to read one in full."]
             for s in self.skills.values():
@@ -1178,33 +1501,185 @@ class AgentSession:
             parts.append("\n".join(lines))
         return "\n".join(parts)
 
+    def overhead_tokens(self) -> int:
+        """Tokens sent on every request before any conversation: instruction + tool schemas."""
+        try:
+            system = self.system_instruction()
+        except StateKeyError:
+            system = self.spec.instruction
+        return estimate_tokens(system) + estimate_tokens(
+            [{"name": n, **s} for n, s in self.tools.items()]
+        )
+
+    def build_messages(self) -> List[Dict[str, Any]]:
+        """The contents this agent is sent, following ADK's include_contents rules."""
+        me = self.spec.name
+        evs = self.events
+        if self.spec.include_contents == "none":
+            # Current turn only: from the latest event written by the user or another agent.
+            start = 0
+            for i in range(len(evs) - 1, -1, -1):
+                if evs[i].get("author", "user") != me:
+                    start = i
+                    break
+            evs = evs[start:]
+        out: List[Dict[str, Any]] = []
+        for e in evs:
+            author = e.get("author", "user")
+            if author in ("user", me):
+                m = {k: v for k, v in e.items() if k != "author"}
+            else:
+                # Another agent's events reach this one as plain user-role context.
+                if e["role"] == "tool":
+                    text = (f"For context: [{author}] `{e.get('name')}` tool returned result: "
+                            f"{json.dumps(e.get('content'), default=str)}")
+                else:
+                    bits = []
+                    if (e.get("text") or "").strip():
+                        bits.append(f"For context: [{author}] said: {e['text']}")
+                    for tc in e.get("tool_calls") or []:
+                        bits.append(f"For context: [{author}] called tool `{tc['name']}` with "
+                                    f"parameters: {json.dumps(tc['args'], default=str)}")
+                    text = "\n".join(bits)
+                if not text:
+                    continue
+                m = {"role": "user", "text": text}
+            if (out and m["role"] == "user" and out[-1]["role"] == "user"
+                    and not out[-1].get("tool_calls")):
+                # Chat templates for Gemma reject two consecutive user turns; merge them.
+                out[-1] = {"role": "user", "text": out[-1].get("text", "") + "\n\n" + m.get("text", "")}
+            else:
+                out.append(m)
+        return out
+
     def _log(self, msg: str) -> None:
         if self.verbose:
             print(("    " * self.depth) + msg)
 
+    def _compact(self) -> None:
+        """Stand-in for ADK events compaction: older events collapse into one summary event.
+
+        The real summary is written by an extra LLM call; here it is a mechanical digest, and the
+        cost of that call is charged to the simulated clock. What matters for testing is that the
+        agent loses its early context, exactly as it will on the scorer.
+        """
+        evs = self.events
+        cut = len(evs) - COMPACTION_RETENTION
+        while cut > 0 and evs[cut]["role"] == "tool":
+            cut -= 1
+        if cut <= 1:
+            return
+        dropped = evs[:cut]
+        first_user = next((e.get("text", "") for e in dropped if e["role"] == "user"), "")
+        actions = []
+        for e in dropped:
+            for tc in e.get("tool_calls") or []:
+                actions.append(f"- {e.get('author')}: {tc['name']}({json.dumps(tc['args'], default=str)[:100]})")
+        summary = (
+            "[Earlier conversation was compacted. Summary follows.]\n"
+            + first_user[:2000]
+            + "\n\nActions taken so far:\n"
+            + "\n".join(actions[-30:])
+        )
+        self.events[:] = [{"author": "user", "role": "user", "text": summary}] + evs[cut:]
+        self.sb.compactions += 1
+        self._cached_tokens = 0
+        if self.sb.sim:
+            self.sb.advance_clock(
+                estimate_tokens(dropped) / self.sb.sim["prefill_tps"]
+                + COMPACTION_SUMMARY_TOKENS / self.sb.sim["decode_tps"]
+            )
+        self.sb.trace.append({"t": round(self.sb.elapsed, 1), "agent": self.spec.name,
+                              "kind": "compaction", "dropped_events": len(dropped)})
+        self._log(f"{C_YELLOW}[context compacted: {len(dropped)} events summarised]{C_RESET}")
+
     def run_turn(self) -> Dict[str, Any]:
-        """One provider round trip plus any tool calls it requests."""
+        """One model request plus the tool calls it asks for."""
+        sb = self.sb
+        system = self.system_instruction()
+        messages = self.build_messages()
+        if (estimate_tokens(messages) > COMPACTION_TOKEN_THRESHOLD
+                and len(self.events) > COMPACTION_RETENTION + 1):
+            self._compact()
+            messages = self.build_messages()
+
+        tool_decl = [{"name": n, **s} for n, s in self.tools.items()]
+        est_prompt = estimate_tokens(system) + estimate_tokens(messages) + estimate_tokens(tool_decl)
+        max_out = int(self.spec.gen_cfg.get("max_output_tokens", 16384))
+        if est_prompt + max_out > MAX_MODEL_LEN:
+            # vLLM rejects a request whose prompt plus max_tokens exceeds max_model_len.
+            sb.context_overflow = True
+            sb.trace.append({"t": round(sb.elapsed, 1), "agent": self.spec.name,
+                             "kind": "context_overflow", "prompt_tokens": est_prompt,
+                             "max_output_tokens": max_out})
+            self._log(f"{C_RED}[context overflow: ~{est_prompt} prompt + {max_out} output "
+                      f"> {MAX_MODEL_LEN}]{C_RESET}")
+            return {"had_tool_call": False, "text": "", "finish_reason": "CONTEXT_OVERFLOW"}
+
         t0 = time.perf_counter()
-        resp = self.backend.generate(
-            self.system_instruction(), self.messages, self.tools, self.spec.gen_cfg
-        )
+        resp = self.backend.generate(system, messages, self.tools, self.spec.gen_cfg)
         latency = time.perf_counter() - t0
-        self.messages.append(
-            {"role": "assistant", "text": resp["text"], "tool_calls": resp["tool_calls"]}
-        )
+
+        usage = resp.get("usage") or {}
+        prompt_tokens = int(usage.get("prompt_tokens") or est_prompt)
+        visible_out = int(usage.get("output_tokens") or estimate_tokens(
+            (resp.get("text") or "") + json.dumps(resp.get("tool_calls") or [], default=str)))
+        thinking = int(usage.get("thinking_tokens") or 0)
+        budget = (self.spec.gen_cfg.get("thinking_config") or {}).get("thinking_budget")
+        if budget is not None:
+            thinking = min(thinking, int(budget))
+        out_tokens = min(visible_out + thinking, max_out)
+
+        if sb.sim:
+            fresh = max(prompt_tokens - self._cached_tokens, 0)
+            sb.advance_clock(fresh / sb.sim["prefill_tps"] + out_tokens / sb.sim["decode_tps"])
+        self._cached_tokens = prompt_tokens + visible_out
+
+        sb.llm_calls += 1
+        sb.prompt_tokens_total += prompt_tokens
+        sb.output_tokens_total += out_tokens
+        sb.prompt_tokens_max = max(sb.prompt_tokens_max, prompt_tokens)
+        ps = sb.phase_stats.setdefault(
+            self.spec.name, {"llm_calls": 0, "tool_calls": 0, "prompt_tokens": 0, "output_tokens": 0})
+        ps["llm_calls"] += 1
+        ps["prompt_tokens"] += prompt_tokens
+        ps["output_tokens"] += out_tokens
+        sb.trace.append({
+            "t": round(sb.elapsed, 1), "agent": self.spec.name, "kind": "llm",
+            "prompt_tokens": prompt_tokens, "output_tokens": out_tokens,
+            "thinking_tokens": thinking, "latency": round(latency, 2),
+            "finish_reason": resp.get("finish_reason", ""),
+            "text": (resp.get("text") or "")[:400],
+            "tool_calls": [tc["name"] for tc in resp["tool_calls"]],
+        })
+
+        self.events.append({"author": self.spec.name, "role": "assistant",
+                            "text": resp["text"], "tool_calls": resp["tool_calls"]})
         if resp["text"].strip():
             self._log(f"\n{C_BOLD}{self.spec.name} ({latency:.1f}s):{C_RESET}")
             self._log(resp["text"].strip()[:4000])
 
         for tc in resp["tool_calls"]:
             name, args = tc["name"], tc["args"]
-            preview = json.dumps(args)[:110]
+            preview = json.dumps(args, default=str)[:110]
             self._log(f"{C_YELLOW}-> {C_BOLD}{name}{C_RESET}({preview})")
 
             if name in self.sub_specs:
                 result = self._run_sub_agent(self.sub_specs[name], str(args.get("request", "")))
+            elif name not in self.tools:
+                # ToolErrorPlugin: an undeclared tool comes back as a structured error.
+                result = _err("UnknownTool", f"Tool {name!r} is not available to {self.spec.name}")
+                sb.tool_errors[f"{name}:UnknownTool"] += 1
             else:
-                result = self.sb.call(name, args, self.skills)
+                result = sb.call(name, args, self.skills)
+            ps["tool_calls"] += 1
+            sb.trace.append({
+                "t": round(sb.elapsed, 1), "agent": self.spec.name, "kind": "tool", "name": name,
+                "arg": str(args.get("command") or args.get("filepath") or args.get("query")
+                           or args.get("node") or args.get("request") or "")[:300],
+                "status": result.get("status"), "error_type": result.get("error_type"),
+                "result_chars": len(json.dumps(result, default=str)),
+            })
 
             if result.get("status") == "ok":
                 detail = ""
@@ -1229,36 +1704,93 @@ class AgentSession:
             if result.get("budget_warning"):
                 self._log(f"   {C_YELLOW}{result['budget_warning']}{C_RESET}")
 
-            self.messages.append(
-                {"role": "tool", "name": name, "tool_call_id": tc["id"], "content": result}
-            )
+            self.events.append({"author": self.spec.name, "role": "tool", "name": name,
+                                "tool_call_id": tc["id"], "content": result})
 
         return {
             "had_tool_call": bool(resp["tool_calls"]),
             "text": resp["text"],
             "finish_reason": resp.get("finish_reason", ""),
-            "usage": resp.get("usage", {}),
         }
 
-    def _run_sub_agent(self, spec: AgentSpec, request: str) -> Dict[str, Any]:
-        self._log(f"   {C_CYAN}[delegating to {spec.name}]{C_RESET}")
-        sub = AgentSession(spec, self.sb, self.backend, self.verbose, self.depth + 1)
-        sub.messages.append({"role": "user", "text": request})
-        final_text = ""
-        for _ in range(8):
-            if self.sb.budget_exhausted() or self.sb.patch_submitted:
+    def run(self) -> Dict[str, Any]:
+        """Run this agent until it answers without a tool call, as one ADK agent run does."""
+        any_tool = False
+        out: Dict[str, Any] = {"had_tool_call": False, "text": "", "finish_reason": ""}
+        while True:
+            if self.sb.patch_submitted or self.sb.budget_exhausted() or self.sb.context_overflow:
                 break
-            out = sub.run_turn()
-            final_text = out["text"] or final_text
+            out = self.run_turn()
+            any_tool = any_tool or out["had_tool_call"]
             if not out["had_tool_call"]:
+                if self.spec.output_key and (out["text"] or "").strip():
+                    self.sb.state[self.spec.output_key] = out["text"].strip()
                 break
-        return {"status": "ok", "agent": spec.name, "response": final_text or "(no response)"}
+        return {**out, "had_tool_call": any_tool}
+
+    def _run_sub_agent(self, spec: AgentSpec, request: str) -> Dict[str, Any]:
+        """AgentTool: the child runs in its own conversation and returns its final text."""
+        self._log(f"   {C_CYAN}[delegating to {spec.name}]{C_RESET}")
+        try:
+            out = run_agent(spec, self.sb, self.backend, self.verbose,
+                            [{"author": "user", "role": "user", "text": request}], self.depth + 1)
+        except StateKeyError as e:
+            return _err("KeyError", str(e))
+        return {"status": "ok", "agent": spec.name, "response": out.get("text") or "(no response)"}
 
 
-def build_initial_prompt(task: Dict[str, Any], sb: Sandbox, root: AgentSession) -> str:
-    declared = set(root.tools)
-    for s in root.sub_specs.values():
-        declared.update(s.tool_names)
+def run_agent(spec: AgentSpec, sb: Sandbox, backend: Backend, verbose: bool,
+              events: List[Dict[str, Any]], depth: int = 0) -> Dict[str, Any]:
+    """Execute one agent of any class against a shared event list."""
+    if not spec.is_workflow:
+        return AgentSession(spec, sb, backend, verbose, depth, events).run()
+
+    def stopped() -> bool:
+        return bool(sb.patch_submitted or sb.budget_exhausted() or sb.context_overflow)
+
+    any_tool = False
+    out: Dict[str, Any] = {"had_tool_call": False, "text": "", "finish_reason": ""}
+    rounds = spec.max_iterations if spec.agent_class == "LoopAgent" else 1
+    for _ in range(rounds):
+        for child in spec.sub_agents:  # ParallelAgent branches are run one after another here
+            if stopped():
+                return {**out, "had_tool_call": any_tool}
+            out = run_agent(child, sb, backend, verbose, events, depth)
+            any_tool = any_tool or out["had_tool_call"]
+        if stopped():
+            break
+    return {**out, "had_tool_call": any_tool}
+
+
+class RootRunner:
+    """The compiled submission plus its session: what the scorer drives with run_async."""
+
+    def __init__(self, spec: AgentSpec, sandbox: Sandbox, backend: Backend, verbose: bool = True):
+        self.spec = spec
+        self.sb = sandbox
+        self.backend = backend
+        self.verbose = verbose
+        self.events: List[Dict[str, Any]] = []
+
+    def add_user(self, text: str) -> None:
+        self.events.append({"author": "user", "role": "user", "text": text})
+
+    def invoke(self) -> Dict[str, Any]:
+        return run_agent(self.spec, self.sb, self.backend, self.verbose, self.events)
+
+    def sessions(self) -> List[AgentSession]:
+        return [AgentSession(a, self.sb, self.backend, self.verbose) for a in self.spec.llm_agents()]
+
+
+def declared_tools(spec: AgentSpec) -> set:
+    out: set = set()
+    for a in spec.llm_agents():
+        out.update(a.tool_names)
+    return out
+
+
+def build_initial_prompt(task: Dict[str, Any], sb: Sandbox, root: AgentSpec) -> str:
+    declared = declared_tools(root)
 
     lines = [
         f"You are evaluating a software engineering task for repository {task['repo']}.",
@@ -1319,20 +1851,30 @@ def build_initial_prompt(task: Dict[str, Any], sb: Sandbox, root: AgentSession) 
     return "\n".join(lines)
 
 
-def run_autonomous(root: AgentSession, sb: Sandbox, max_turns: int) -> Dict[str, Any]:
+def run_autonomous(root: "RootRunner", sb: Sandbox, max_turns: Optional[int] = None) -> Dict[str, Any]:
+    """The scorer's outer loop: invoke the root agent, nudge, repeat until a stop condition."""
+    if max_turns is not None:
+        sb.max_turns = int(max_turns)
     nudges = 0
     total_nudges = 0
-    turns = 0
-    end_reason = "max_turns"
-    first_edit_turn: Optional[int] = None
-    while turns < max_turns:
-        turns += 1
-        out = root.run_turn()
-        if first_edit_turn is None and sb.edits_landed:
-            first_edit_turn = turns
+    invocations = 0
+    end_reason = "nudge_limit"
+    wall0 = time.time()
+    while True:
+        invocations += 1
+        try:
+            out = root.invoke()
+        except StateKeyError as e:
+            end_reason = "state_key_error"
+            print(f"\n{C_RED}{e} - the scorer would abort this task.{C_RESET}")
+            break
         if sb.patch_submitted:
             end_reason = "submit_patch"
             print(f"\n{C_GREEN}submit_patch called - ending session.{C_RESET}")
+            break
+        if sb.context_overflow:
+            end_reason = "context_overflow"
+            print(f"\n{C_RED}context window exceeded - ending session.{C_RESET}")
             break
         blocked = sb.budget_exhausted()
         if blocked:
@@ -1341,8 +1883,8 @@ def run_autonomous(root: AgentSession, sb: Sandbox, max_turns: int) -> Dict[str,
             break
         if out["had_tool_call"]:
             nudges = 0
-            continue
-        nudges += 1
+        else:
+            nudges += 1
         total_nudges += 1
         if nudges > 3:
             end_reason = "nudge_limit"
@@ -1355,26 +1897,38 @@ def run_autonomous(root: AgentSession, sb: Sandbox, max_turns: int) -> Dict[str,
             nudge = NUDGE_MAXTOK
         else:
             nudge = NUDGE_NORMAL
-        print(f"\n{C_YELLOW}[nudge {nudges}/3]{C_RESET} {nudge[:90]}...")
-        root.messages.append({"role": "user", "text": nudge})
+        print(f"\n{C_YELLOW}[nudge {max(nudges, 1)}/3]{C_RESET} {nudge[:90]}...")
+        root.add_user(nudge)
 
     patch = sb.submitted_patch
     if not patch:
         patch = sb.live_diff()
         if patch.strip():
             print(f"{C_YELLOW}No submit_patch; recovered {len(patch)} B from the working tree.{C_RESET}")
+    limit = float(sb.budget["max_time_minutes"]) * 60.0
     return {
-        "turns": turns,
+        "turns": sb.llm_calls,
+        "invocations": invocations,
         "tool_calls": sb.tool_calls_used,
         "elapsed_seconds": round(sb.elapsed, 1),
+        "wall_seconds": round(time.time() - wall0, 1),
+        "simulated_clock": bool(sb.sim),
+        "overshoot_seconds": round(max(0.0, sb.elapsed - limit), 1),
         "patch_submitted": sb.patch_submitted,
         "end_reason": end_reason,
         "nudges": total_nudges,
         "edits_landed": sb.edits_landed,
-        "first_edit_turn": first_edit_turn,
+        "first_edit_turn": sb.first_edit_call,
+        "prompt_tokens_total": sb.prompt_tokens_total,
+        "output_tokens_total": sb.output_tokens_total,
+        "prompt_tokens_max": sb.prompt_tokens_max,
+        "compactions": sb.compactions,
+        "phase_stats": sb.phase_stats,
+        "agent_env": sb.agent_env_key,
         "tool_uses": dict(sb.tool_uses),
         "tool_errors": dict(sb.tool_errors),
         "failed_calls": sb.failed_calls,
+        "trace": sb.trace,
         "patch": patch,
     }
 
@@ -1387,7 +1941,11 @@ def make_backend(kind: str, model: str, api_base: str = "", mock_script: Optiona
         if not key:
             raise SystemExit("set GEMINI_API_KEY or GOOGLE_API_KEY")
         return GeminiBackend(model, api_key=key)
-    return OpenAIBackend(model, api_key=os.environ.get("OPENAI_API_KEY", ""), api_base=api_base)
+    return OpenAIBackend(
+        model,
+        api_key=os.environ.get("OPENAI_API_KEY", ""),
+        api_base=api_base or os.environ.get("SWE_API_BASE", DEFAULT_API_BASE),
+    )
 
 
 def run_task(
@@ -1398,16 +1956,18 @@ def run_task(
     verify: bool = False,
     verbose: bool = True,
     keep_sandbox: bool = False,
+    sim: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
     """Phase 1 (+ optional Phase 2) for one task. Shared by --auto and run_experiment.py."""
     tmp = tempfile.mkdtemp(prefix=f"swegemma_{task['instance_id']}_")
     workspace = Path(tmp) / "workspace"
     try:
         extract_snapshot_to_dir(snapshot, workspace)
-        sb = Sandbox(workspace, task, dict(sub.budget))
-        root = AgentSession(sub.root, sb, backend, verbose=verbose)
-        root.messages.append({"role": "user", "text": build_initial_prompt(task, sb, root)})
-        result = run_autonomous(root, sb, int(sub.budget["max_turns"]))
+        agent_env = os.environ.get("SWE_AGENT_ENV") or os.environ.get("SWE_TEST_ENV", "auto")
+        sb = Sandbox(workspace, task, dict(sub.budget), sim=sim, agent_env=agent_env)
+        root = RootRunner(sub.root, sb, backend, verbose=verbose)
+        root.add_user(build_initial_prompt(task, sb, sub.root))
+        result = run_autonomous(root, sb)
         result["instance_id"] = task["instance_id"]
         result["repo"] = task["repo"]
         result["patch_size"] = len(result["patch"])
@@ -1417,6 +1977,7 @@ def run_task(
                 result["resolved"] = bool(v.get("resolved"))
                 result["pytest_exit_code"] = v.get("exit_code")
                 result["verify_error"] = v.get("error")
+                result["verify_stdout"] = (v.get("stdout") or "")[-1500:]
                 result["test_env"] = v.get("test_env", "unknown")
             else:
                 result["resolved"] = False
@@ -1429,6 +1990,12 @@ def run_task(
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+IMPORT_CRASH_MARKERS = (
+    "NameError", "SyntaxError", "IndentationError", "ImportError", "ModuleNotFoundError",
+    "error during collection", "errors during collection", "TypeError: non-default argument",
+)
+
+
 def classify_failure(r: Dict[str, Any]) -> str:
     """Bucket a non-resolved task so a sweep says *why* it failed, not just that it did."""
     if r.get("resolved"):
@@ -1437,9 +2004,19 @@ def classify_failure(r: Dict[str, Any]) -> str:
         if not r.get("edits_landed"):
             return "no_edit_attempted"
         return "edits_made_but_no_diff"
+    if r.get("patch_size", 0) > 1_000_000:
+        return "patch_polluted"
     err = str(r.get("verify_error") or "")
     if "apply" in err.lower():
         return "patch_did_not_apply"
+    out = str(r.get("verify_stdout") or "")
+    # A collection error means the patch broke importing the package: a different defect from a
+    # wrong fix, and one a compile/import check before submitting would have caught.
+    if r.get("pytest_exit_code") == 2 or "during collection" in out:
+        if "ModuleNotFoundError: No module named" in out or "package to be installed" in out:
+            return "test_env_broken"
+        if any(m in out for m in IMPORT_CRASH_MARKERS):
+            return "patch_breaks_import"
     return "tests_failed"
 
 
@@ -1464,7 +2041,7 @@ Commands:
 """
 
 
-def repl(root: AgentSession, sb: Sandbox, task: Dict[str, Any], snapshot: Path,
+def repl(root: "RootRunner", sb: Sandbox, task: Dict[str, Any], snapshot: Path,
          sub: Submission, initial_prompt: str) -> None:
     try:
         import readline  # noqa: F401
@@ -1492,7 +2069,7 @@ def repl(root: AgentSession, sb: Sandbox, task: Dict[str, Any], snapshot: Path,
             print(color_diff(d))
             continue
         if low == "/status":
-            print(json.dumps(sb.call("get_status", {}, root.skills), indent=2))
+            print(json.dumps(sb.call("get_status", {}, {}), indent=2))
             continue
         if low == "/tree":
             print(sub.describe())
@@ -1501,14 +2078,12 @@ def repl(root: AgentSession, sb: Sandbox, task: Dict[str, Any], snapshot: Path,
             print(initial_prompt)
             continue
         if low == "/tools":
-            def show(a: AgentSession, ind: str = "") -> None:
-                print(f"{ind}{a.spec.name}: {', '.join(sorted(a.tools))}")
-                for s in a.sub_specs.values():
-                    print(f"{ind}  {s.name}: {', '.join(s.tool_names)}")
-            show(root)
+            for a in root.sessions():
+                print(f"{a.spec.name}: {', '.join(sorted(a.tools))}  "
+                      f"(~{a.overhead_tokens()} tokens per request)")
             continue
         if low.startswith("/run "):
-            res = sb.call("run_command", {"command": line[5:]}, root.skills)
+            res = sb.call("run_command", {"command": line[5:]}, {})
             print(res.get("stdout") or res.get("details", {}).get("stdout", ""))
             err = res.get("stderr") or res.get("details", {}).get("stderr", "")
             if err:
@@ -1516,7 +2091,7 @@ def repl(root: AgentSession, sb: Sandbox, task: Dict[str, Any], snapshot: Path,
             print(f"exit={res.get('exit_code', res.get('details', {}).get('exit_code'))}")
             continue
         if low.startswith("/cat "):
-            res = sb.call("read_file", {"filepath": line[5:].strip()}, root.skills)
+            res = sb.call("read_file", {"filepath": line[5:].strip()}, {})
             print(res.get("content") or res.get("error_message"))
             continue
         if low == "/reset":
@@ -1530,17 +2105,17 @@ def repl(root: AgentSession, sb: Sandbox, task: Dict[str, Any], snapshot: Path,
             print(f"\nresolved={res.get('resolved')} exit_code={res.get('exit_code')}")
             continue
         if low == "/auto":
-            root.messages.append({"role": "user", "text": initial_prompt})
+            root.add_user(initial_prompt)
             print(json.dumps(
-                {k: v for k, v in run_autonomous(root, sb, int(sb.budget["max_turns"])).items()
-                 if k != "patch"}, indent=2))
+                {k: v for k, v in run_autonomous(root, sb).items()
+                 if k not in ("patch", "trace")}, indent=2))
             continue
 
-        root.messages.append({"role": "user", "text": line})
-        for _ in range(int(sb.budget["max_turns"])):
-            out = root.run_turn()
-            if not out["had_tool_call"] or sb.patch_submitted or sb.budget_exhausted():
-                break
+        root.add_user(line)
+        try:
+            root.invoke()
+        except StateKeyError as e:
+            print(f"{C_RED}{e}{C_RESET}")
 
 
 # --------------------------------------------------------------------------------------
@@ -1571,7 +2146,14 @@ def main() -> None:
         help="Skip the agent: run Phase 2 verification on this .patch file and exit",
     )
     ap.add_argument("--model", help="override the model the submission declares")
-    ap.add_argument("--api-base", default="http://127.0.0.1:8000/v1")
+    ap.add_argument("--api-base", default=os.environ.get("SWE_API_BASE", DEFAULT_API_BASE),
+                    help="OpenAI-compatible endpoint for --backend openai (env SWE_API_BASE)")
+    ap.add_argument("--probe-endpoint", action="store_true",
+                    help="check --api-base: list models, one tool call, measured tokens/second")
+    ap.add_argument("--sim", choices=sorted(SIM_PRESETS),
+                    help="run the task clock at assumed Gemma speeds instead of API speed")
+    ap.add_argument("--sim-prefill-tps", type=float, help="prompt tokens/second for the simulated clock")
+    ap.add_argument("--sim-decode-tps", type=float, help="output tokens/second for the simulated clock")
     ap.add_argument("--auto", action="store_true", help="run autonomously instead of the REPL")
     ap.add_argument("--verify", action="store_true", help="run Phase 2 after an --auto run")
     ap.add_argument("--dry-run", action="store_true", help="validate and print, no API calls")
@@ -1592,6 +2174,24 @@ def main() -> None:
     # a dependency on this script's argument parser.
     os.environ["SWE_TEST_ENV"] = args.test_env
 
+    if args.probe_endpoint:
+        be = OpenAIBackend(args.model or "", api_key=os.environ.get("OPENAI_API_KEY", ""),
+                           api_base=args.api_base)
+        if not be.model:
+            req = urllib.request.Request(f"{be.api_base}/models")
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                be.model = json.loads(resp.read().decode("utf-8"))["data"][0]["id"]
+        info = be.probe()
+        print(json.dumps(info, indent=2))
+        if info.get("decode_tps") and info.get("prefill_tps"):
+            print(f"\nUse these for the simulated clock:\n  --sim-prefill-tps "
+                  f"{info['prefill_tps']} --sim-decode-tps {info['decode_tps']}")
+        if not info.get("tool_call_parsed"):
+            print(f"{C_RED}The endpoint did not return a parsed tool call. Check that vLLM runs "
+                  f"with --enable-auto-tool-choice --tool-call-parser gemma4.{C_RESET}")
+        return
+
+    sim = make_sim(args)
     sub = Submission(Path(args.submission_dir))
     print("=" * 78)
     print(f"{C_BOLD}  COMPILED SUBMISSION{C_RESET}  {sub.dir}")
@@ -1658,11 +2258,13 @@ def main() -> None:
         print(f"\n{C_BOLD}Task:{C_RESET} {task['instance_id']}  {C_BOLD}Model:{C_RESET} {model}")
         result = run_task(
             sub, task, snapshot, backend,
-            verify=args.verify, keep_sandbox=args.keep_sandbox,
+            verify=args.verify, keep_sandbox=args.keep_sandbox, sim=sim,
         )
         patch = result.pop("patch")
         out_dir = Path(args.results_dir) / task["instance_id"]
         out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "trace.json").write_text(
+            json.dumps(result.pop("trace", []), indent=1), encoding="utf-8")
         (out_dir / f"{task['instance_id']}.patch").write_text(patch, encoding="utf-8")
         print(f"\n{C_BOLD}--- PATCH ({len(patch)} bytes) ---{C_RESET}")
         print(color_diff(patch))
@@ -1684,21 +2286,25 @@ def main() -> None:
     workspace = Path(tmp) / "workspace"
     print(f"\n{C_CYAN}Unpacking snapshot into {workspace}{C_RESET}")
     extract_snapshot_to_dir(snapshot, workspace)
-    sb = Sandbox(workspace, task, sub.budget)
-    root = AgentSession(sub.root, sb, backend)
-    initial_prompt = build_initial_prompt(task, sb, root)
+    sb = Sandbox(workspace, task, sub.budget, sim=sim,
+                 agent_env="host" if args.dry_run else os.environ.get("SWE_TEST_ENV", "auto"))
+    root = RootRunner(sub.root, sb, backend)
+    initial_prompt = build_initial_prompt(task, sb, sub.root)
 
     try:
         if args.dry_run:
-            print(f"\n{C_BOLD}--- tools exposed to {sub.root.name} ---{C_RESET}")
-            for n in sorted(root.tools):
-                print(f"  {n}")
-            print(
-                f"\n{C_BOLD}--- system instruction "
-                f"({len(root.system_instruction())} chars) ---{C_RESET}"
-            )
-            print(root.system_instruction()[:1500] + "\n...")
-            print(f"\n{C_BOLD}--- initial user prompt ({len(initial_prompt)} chars) ---{C_RESET}")
+            # Fill the keys that earlier agents produce so every instruction can be rendered.
+            for a in sub.root.all_agents():
+                if a.output_key:
+                    sb.state.setdefault(a.output_key, f"<{a.output_key} from {a.name}>")
+            for a in root.sessions():
+                print(f"\n{C_BOLD}--- {a.spec.name}: {', '.join(sorted(a.tools))} ---{C_RESET}")
+                si = a.system_instruction()
+                print(f"instruction {len(si)} chars; ~{a.overhead_tokens()} tokens sent on "
+                      f"every request (instruction + tool schemas)")
+                print(si[:1200] + ("\n..." if len(si) > 1200 else ""))
+            print(f"\n{C_BOLD}--- initial user prompt ({len(initial_prompt)} chars, "
+                  f"~{estimate_tokens(initial_prompt)} tokens) ---{C_RESET}")
             print(initial_prompt[:2500] + "\n...")
             print(f"\n{C_GREEN}Dry run complete: no API calls were made.{C_RESET}")
             return

@@ -509,6 +509,17 @@ def _repo_configures_pytest(workspace: Path) -> bool:
     return False
 
 
+GIT_EXCLUDE_PATTERNS = [
+    "__pycache__/",
+    "*.pyc",
+    ".pytest_cache/",
+    "*.egg-info/",
+    "build/",
+    "dist/",
+    ".coverage",
+]
+
+
 def extract_snapshot_to_dir(tgz_path: Path, dest_dir: Path):
     dest_dir.mkdir(parents=True, exist_ok=True)
     with tarfile.open(tgz_path, "r:gz") as tar:
@@ -528,6 +539,13 @@ def extract_snapshot_to_dir(tgz_path: Path, dest_dir: Path):
 
     # Initialize baseline git commit
     subprocess.run(["git", "init", "-q"], cwd=str(dest_dir))
+    # setup_git_exclude: the real harness appends these before the baseline commit so build and
+    # test artifacts never reach `git diff`. Without them a single pytest run or editable install
+    # puts megabytes of __pycache__ / egg-info into the agent patch.
+    exclude = dest_dir / ".git" / "info" / "exclude"
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    with exclude.open("a", encoding="utf-8") as fh:
+        fh.write("\n".join(GIT_EXCLUDE_PATTERNS) + "\n")
     subprocess.run(["git", "config", "user.name", "swegemma_eval"], cwd=str(dest_dir))
     subprocess.run(["git", "config", "user.email", "eval@swegemma.local"], cwd=str(dest_dir))
     subprocess.run(["git", "add", "-A"], cwd=str(dest_dir))

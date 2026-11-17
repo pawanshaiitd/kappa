@@ -1,0 +1,12 @@
+diff --git a/rich/traceback.py b/rich/traceback.py
+index fcefeb23..5e504ba4 100644
+--- a/rich/traceback.py
++++ b/rich/traceback.py
+@@ -179,6 +179,7 @@ class Frame:
+     name: str
+     line: str = ""
+     locals: Optional[Dict[str, pretty.Node]] = None
++    notes: Optional[str] = None
+ 
+ 
+ @dataclass

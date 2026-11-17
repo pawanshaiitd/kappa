@@ -1,0 +1,11 @@
+name: solver
+description: Finds the code that must change and makes the smallest edit that fixes the problem.
+model: gemma-4-12b-it-qat-w4a16-ct
+instruction: !include prompts/solver.md
+output_key: fix_summary
+tools:
+  - run_command
+  - read_file
+  - edit_file
+  - get_code_neighbors
+generate_content_config: !include configs/sampling.yaml

@@ -1,0 +1,13 @@
+diff --git a/fastapi/routing.py b/fastapi/routing.py
+index 16a89ef3..5510cb8f 100644
+--- a/fastapi/routing.py
++++ b/fastapi/routing.py
+@@ -47,7 +47,7 @@ from fastapi.dependencies.utils import (
+     get_typed_return_annotation,
+     solve_dependencies,
+ )
+-from fastapi.encoders import jsonable_encoder
++from fastapi.exceptions import FastAPIError
+ from fastapi.exceptions import (
+     EndpointContext,
+     FastAPIError,

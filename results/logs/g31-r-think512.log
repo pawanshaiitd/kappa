@@ -1,0 +1,3 @@
+[1mexperiment:[0m g31-r-think512   [1mvariant:[0m baseline
+[1mmodel:[0m google/gemma-4-31B-it-qat-w4a16-ct via openai   [1mtasks:[0m 30 of 30   [1mclock:[0m simulated {"prefill_tps": 1500.0, "decode_tps": 10.6}
+[1mendpoint:[0m http://10.120.12.55:8000/v1

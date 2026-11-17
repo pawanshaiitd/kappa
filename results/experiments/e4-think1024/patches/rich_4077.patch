@@ -1,0 +1,16 @@
+diff --git a/rich/file_proxy.py b/rich/file_proxy.py
+index 4b0b0da6..29c69daf 100644
+--- a/rich/file_proxy.py
++++ b/rich/file_proxy.py
+@@ -23,8 +23,11 @@ class FileProxy(io.TextIOBase):
+         return self.__file
+ 
+     def __getattr__(self, name: str) -> Any:
++        if name == "isatty":
++            return lambda: True
+         return getattr(self.__file, name)
+ 
++
+     def write(self, text: str) -> int:
+         if not isinstance(text, str):
+             raise TypeError(f"write() argument must be str, not {type(text).__name__}")

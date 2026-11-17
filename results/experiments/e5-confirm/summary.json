@@ -1,0 +1,98 @@
+{
+  "name": "e5-confirm",
+  "variant": [
+    "baseline"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 169.9,
+    "task_seconds_p90": 193.7,
+    "task_seconds_max": 225.8,
+    "notebook_hours": {
+      "129": 8.5,
+      "200": 13.0,
+      "300": 19.4
+    }
+  },
+  "phase_medians": {
+    "locator": {
+      "llm_calls": 15.5,
+      "tool_calls": 14.5,
+      "prompt_tokens": 75103.0,
+      "output_tokens": 4015.5
+    },
+    "fixer": {
+      "llm_calls": 5.5,
+      "tool_calls": 4.5,
+      "prompt_tokens": 19427.0,
+      "output_tokens": 2171.5
+    },
+    "verifier": {
+      "llm_calls": 4,
+      "tool_calls": 3,
+      "prompt_tokens": 10333,
+      "output_tokens": 1194
+    }
+  },
+  "median_prompt_tokens_max": 9594.0,
+  "max_prompt_tokens": 20224,
+  "median_output_tokens": 6929.0,
+  "compactions": 2,
+  "agent_envs": {
+    "cd8edd2480d890f5": 12,
+    "570f643d3542f861": 1,
+    "e557f7f9d9cea265": 1,
+    "b9a2f84bf6da3405": 1,
+    "e6d243e69e171e4a": 1,
+    "4f1dee1a877173f8": 1,
+    "4352d33e65d29c27": 2,
+    "d701d52285d2e297": 4,
+    "a90fce46fa6a543f": 7
+  },
+  "tasks": 30,
+  "resolved": 1,
+  "resolution_rate": 0.0333,
+  "failure_buckets": {
+    "no_edit_attempted": 25,
+    "tests_failed": 4,
+    "resolved": 1
+  },
+  "median_turns": 22.0,
+  "median_tool_calls": 20.5,
+  "median_seconds": 181.3,
+  "median_first_edit_turn": 17.5,
+  "submitted_explicitly": 0,
+  "empty_patches": 25,
+  "tool_errors": {
+    "run_command:CommandError": 37,
+    "edit_file:FileEditError": 8,
+    "read_file:FileNotFoundError": 1
+  },
+  "failing_commands": {
+    "grep -n": 8,
+    "sed -i": 8,
+    "python3 -c": 6,
+    "read_file fastapi/params.py": 4,
+    "grep -r": 3,
+    "echo \"machine:host:password\"": 3,
+    "read_file src/requests/sessions.py": 2,
+    "grep -rn": 1,
+    "read_file fastapi/routing.py": 1,
+    "cat <<EOF": 1
+  },
+  "test_envs": {
+    "unknown": 25,
+    "cd8edd2480d890f5": 2,
+    "4352d33e65d29c27": 2,
+    "d701d52285d2e297": 1
+  },
+  "end_reasons": {
+    "time_budget_exhausted": 16,
+    "tool-call_budget_exhausted": 14
+  },
+  "sim": null,
+  "eval_set": "experiments/eval_sets/set30_b.json",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

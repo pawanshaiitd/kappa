@@ -1,0 +1,27 @@
+diff --git a/fastapi/dependencies/models.py b/fastapi/dependencies/models.py
+index fbb666a7..393d2148 100644
+--- a/fastapi/dependencies/models.py
++++ b/fastapi/dependencies/models.py
+@@ -77,16 +77,18 @@ class Dependant:
+ 
+     @cached_property
+     def is_gen_callable(self) -> bool:
+-        if inspect.isgeneratorfunction(self.call):
++        call = inspect.unwrap(self.call)
++        if inspect.isgeneratorfunction(call):
+             return True
+-        dunder_call = getattr(self.call, "__call__", None)  # noqa: B004
++        dunder_call = getattr(call, "__call__", None)  # noqa: B004
+         return inspect.isgeneratorfunction(dunder_call)
+ 
+     @cached_property
+     def is_async_gen_callable(self) -> bool:
+-        if inspect.isasyncgenfunction(self.call):
++        call = inspect.unwrap(self.call)
++        if inspect.isasyncgenfunction(call):
+             return True
+-        dunder_call = getattr(self.call, "__call__", None)  # noqa: B004
++        dunder_call = getattr(call, "__call__", None)  # noqa: B004
+         return inspect.isasyncgenfunction(dunder_call)
+ 
+     @cached_property

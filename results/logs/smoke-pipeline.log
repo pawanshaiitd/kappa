@@ -1,0 +1,63 @@
+[1mexperiment:[0m smoke-pipeline   [1mvariant:[0m baseline
+[1mmodel:[0m google/gemma-4-12B-it-qat-w4a16-ct via openai   [1mtasks:[0m 4 of 4   [1mclock:[0m wall
+[1mendpoint:[0m http://10.120.0.183:8000/v1
+
+[93mtool-call budget exhausted - ending session.[0m
+[1/4] fastapi_14301  -> [91mno_edit_attempted[0m  turns=22 calls=22 patch=0B 20.2s peak_prompt=8149 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[2/4] rich_4077  -> [91mno_edit_attempted[0m  turns=22 calls=22 patch=0B 29.7s peak_prompt=6390 end=tool-call_budget_exhausted
+
+[93m[nudge 1/3][0m Please continue your work using the available tools, or call submit_patch when you have co...
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 692 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_utils.py -q -W default  [env 4352d33e65d29c27]
+[Verification Test Output]:
+..s..................................................................... [ 32%]
+........................................................................ [ 65%]
+...........................................................sssssssssss.. [ 98%]
+...s                                                                     [100%]
+=============================== warnings summary ===============================
+tests/test_utils.py::TestContentEncodingDetection::test_none
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta charset="UTF-8">]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta http-equiv="Content-type" content="text/html;charset=UTF-8">]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />]
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas[<?xml version="1.0" encoding="UTF-8"?>]
+tests/test_utils.py::TestContentEncodingDetection::test_precedence
+  /var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/swegemma_verif_requests_7309_f0oxy1tb/workspace/src/requests/utils.py:484: DeprecationWarning: In requests 3.0, get_encodings_from_content will be removed. For more information, please see the discussion on issue #2266. (This warning should only appear once.)
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+207 passed, 13 skipped, 6 warnings in 0.15s
+
+[2026-11-17 12:21:40,557] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[3/4] requests_7309  -> [92mRESOLVED[0m  turns=26 calls=22 patch=692B 110.7s peak_prompt=13215 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[4/4] fastapi_9555  -> [91mno_edit_attempted[0m  turns=24 calls=22 patch=0B 109.9s peak_prompt=7535 end=tool-call_budget_exhausted
+
+========================================================================
+[1m  smoke-pipeline[0m   variant: baseline
+========================================================================
+  resolution rate : [92m0.250[0m  (1/4)
+  failure buckets : {'resolved': 1, 'no_edit_attempted': 3}
+  end reasons     : {'tool-call_budget_exhausted': 4}
+  medians         : turns=23.0 calls=22.0 secs=69.8 first_edit_turn=6
+  empty patches   : 3   explicit submits: 0
+  tool errors     : {'run_command:CommandError': 2}
+  failing commands: {'grep -n': 2}
+  context         : median peak prompt=7842.0 tok  max=13215 tok  compactions=0
+  phase locator     : llm_calls=17.5  tool_calls=17  prompt_tokens=96651.5  output_tokens=2788
+  phase fixer       : llm_calls=4.5  tool_calls=3.5  prompt_tokens=16952  output_tokens=1521.5
+  phase verifier    : llm_calls=8  tool_calls=7.5  prompt_tokens=30152.5  output_tokens=1483.5
+  time per task   : mean=67.6s p90=110.7s max=110.7s  (API wall clock - NOT a Gemma estimate)
+
+Artifacts: /Users/pawankumar.s/Documents/kappa/results/experiments/smoke-pipeline

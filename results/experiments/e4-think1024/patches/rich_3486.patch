@@ -1,0 +1,22 @@
+diff --git a/rich/traceback.py b/rich/traceback.py
+index fcefeb23..7ecc8768 100644
+--- a/rich/traceback.py
++++ b/rich/traceback.py
+@@ -441,7 +441,7 @@ class Traceback:
+                     yield key, value
+ 
+             for frame_summary, line_no in walk_tb(traceback):
+-                filename = frame_summary.f_code.co_filename
++                filename = getattr(frame_summary, "filename", frame_summary.f_code.co_filename)
+                 if filename and not filename.startswith("<"):
+                     if not os.path.isabs(filename):
+                         filename = os.path.join(_IMPORT_CWD, filename)
+@@ -451,7 +451,7 @@ class Traceback:
+                 frame = Frame(
+                     filename=filename or "?",
+                     lineno=line_no,
+-                    name=frame_summary.f_code.co_name,
++                    name=getattr(frame_summary, "method", frame_summary.f_code.co_name),
+                     locals={
+                         key: pretty.traverse(
+                             value,

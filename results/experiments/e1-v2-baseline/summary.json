@@ -1,0 +1,95 @@
+{
+  "name": "e1-v2-baseline",
+  "variant": [
+    "baseline"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 465.3,
+    "task_seconds_p90": 732.4,
+    "task_seconds_max": 1925.6,
+    "notebook_hours": {
+      "129": 19.1,
+      "200": 29.4,
+      "300": 44.0
+    }
+  },
+  "phase_medians": {
+    "mkpro_coordinator": {
+      "llm_calls": 60.0,
+      "tool_calls": 58.0,
+      "prompt_tokens": 654142.5,
+      "output_tokens": 21378.5
+    }
+  },
+  "median_prompt_tokens_max": 16754.0,
+  "max_prompt_tokens": 21753,
+  "median_output_tokens": 21378.5,
+  "compactions": 66,
+  "agent_envs": {
+    "fda4695ce7e4da7c": 1,
+    "cd8edd2480d890f5": 9,
+    "35422b7e951e0004": 1,
+    "816089f2a1d5780e": 1,
+    "01e9b61bd411ac3d": 2,
+    "82257c00fb99919f": 1,
+    "7c44ce1aa7eb82cb": 1,
+    "4352d33e65d29c27": 2,
+    "3bd2b5b0cae32f07": 1,
+    "d701d52285d2e297": 6,
+    "a90fce46fa6a543f": 5
+  },
+  "tasks": 30,
+  "resolved": 7,
+  "resolution_rate": 0.2333,
+  "failure_buckets": {
+    "no_edit_attempted": 18,
+    "tests_failed": 4,
+    "patch_breaks_import": 1,
+    "resolved": 7
+  },
+  "median_turns": 60.0,
+  "median_tool_calls": 58.0,
+  "median_seconds": 400.0,
+  "median_first_edit_turn": 12.0,
+  "submitted_explicitly": 6,
+  "empty_patches": 18,
+  "tool_errors": {
+    "run_command:CommandError": 141,
+    "edit_file:FileEditError": 61,
+    "run_command:TimeoutExceeded": 3,
+    "get_code_neighbors:NotIndexed": 3,
+    "run_command:cat >> /tmp/notes.md <<'EOF'\nTARGET: rich/prompt.py:45-300 SYMBOL: PromptBase\nCAUSE: Need to add case_sensitive=False support to Prompt.ask.\nRULED OUT: None\nVERIFY: python -c \"from rich.prompt import Prompt; Prompt.ask:UnknownTool": 1
+  },
+  "failing_commands": {
+    "python3 -c": 56,
+    "grep -rn": 40,
+    "cat >": 20,
+    "grep -n": 11,
+    "cat /tmp/notes.md": 4,
+    "python /tmp/repro.py": 2,
+    "python3 /tmp/repro.py": 2,
+    "python3 -m": 2,
+    "ls tests": 2,
+    "grep -rnE": 1,
+    "grep -nE": 1,
+    "sed -n": 1
+  },
+  "test_envs": {
+    "unknown": 18,
+    "cd8edd2480d890f5": 3,
+    "01e9b61bd411ac3d": 2,
+    "4352d33e65d29c27": 1,
+    "d701d52285d2e297": 3,
+    "a90fce46fa6a543f": 3
+  },
+  "end_reasons": {
+    "max_turns": 24,
+    "submit_patch": 6
+  },
+  "sim": null,
+  "eval_set": "experiments/eval_sets/set30_a.json",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

@@ -1,0 +1,172 @@
+[1/129] fastapi_15661: [93mNOT scorable here[0m - ERROR tests/test_prepare_release.py
+[2/129] fastapi_15588: [93mNOT scorable here[0m - ERROR tests/test_sse.py - RuntimeError: The starlette.testclient module requi...
+[3/129] fastapi_15589: [93mNOT scorable here[0m - ERROR tests/test_query_cookie_header_model_extra_params.py - RuntimeError: Th...
+[4/129] fastapi_15030: [93mNOT scorable here[0m - ERROR tests/test_sse.py - RuntimeError: The starlette.testclient module requi...
+[5/129] fastapi_14962: [93mNOT scorable here[0m - ERROR tests/test_dump_json_fast_path.py - RuntimeError: The starlette.testcli...
+[6/129] fastapi_15280: [92mscorable[0m
+[7/129] fastapi_14964: [93mNOT scorable here[0m - ERROR tests/test_deprecated_responses.py - RuntimeError: The starlette.testcl...
+[8/129] fastapi_15023: [93mNOT scorable here[0m - ERROR tests/test_tutorial/test_stream_data/test_tutorial002.py - RuntimeError...
+[9/129] fastapi_14986: [93mNOT scorable here[0m - ERROR tests/test_openapi_cache_root_path.py - RuntimeError: The starlette.tes...
+[10/129] fastapi_14978: [93mNOT scorable here[0m - ERROR tests/test_strict_content_type_app_level.py - RuntimeError: The starlet...
+[11/129] requests_7505: [92mscorable[0m
+[12/129] requests_7502: [92mscorable[0m
+[13/129] requests_7433: [92mscorable[0m
+[14/129] requests_7427: [92mscorable[0m
+[15/129] requests_7315: [92mscorable[0m
+[16/129] requests_7328: [92mscorable[0m
+[17/129] requests_7309: [92mscorable[0m
+[18/129] requests_7205: [92mscorable[0m
+[19/129] rich_4070: [92mscorable[0m
+[20/129] rich_4077: [92mscorable[0m
+[21/129] rich_4079: [93mNOT scorable here[0m - E         - [0m[38;2;248;248;242;48;2;39;40;34mprint[0m[38;2;248;248;242;48;2;39;4
+[22/129] rich_4076: [92mscorable[0m
+[23/129] rich_4075: [92mscorable[0m
+[24/129] rich_4006: [92mscorable[0m
+[25/129] fastapi_14258: [92mscorable[0m
+[26/129] fastapi_14851: [93mNOT scorable here[0m - ERROR tests/test_router_events.py - RuntimeError: The starlette.testclient mo...
+[27/129] fastapi_14873: [93mNOT scorable here[0m - ERROR tests/test_router_events.py - RuntimeError: The starlette.testclient mo...
+[28/129] fastapi_13920: [93mNOT scorable here[0m - ERROR tests/test_dependency_pep695.py - RuntimeError: The starlette.testclien...
+[29/129] fastapi_14794: [93mNOT scorable here[0m - ERROR tests/test_response_dependency.py - RuntimeError: The starlette.testcli...
+[30/129] fastapi_14786: [93mNOT scorable here[0m - ERROR tests/test_security_http_base.py - RuntimeError: The starlette.testclie...
+[31/129] fastapi_14492: [93mNOT scorable here[0m - ERROR tests/test_tutorial/test_metadata/test_tutorial001_1.py - RuntimeError:...
+[32/129] fastapi_14479: [92mscorable[0m
+[33/129] fastapi_14463: [92mscorable[0m
+[34/129] fastapi_12942: [92mscorable[0m
+[35/129] fastapi_14099: [92mscorable[0m
+[36/129] fastapi_14609: [92mscorable[0m
+[37/129] fastapi_14372: [92mscorable[0m
+[38/129] fastapi_14349: [92mscorable[0m
+[39/129] fastapi_14512: [92mscorable[0m
+[40/129] fastapi_14487: [92mscorable[0m
+[41/129] fastapi_11355: [92mscorable[0m
+[42/129] fastapi_14485: [92mscorable[0m
+[43/129] fastapi_14482: [92mscorable[0m
+[44/129] fastapi_14306: [92mscorable[0m
+[45/129] fastapi_14458: [92mscorable[0m
+[46/129] fastapi_14459: [92mscorable[0m
+[47/129] fastapi_14448: [92mscorable[0m
+[48/129] fastapi_14455: [92mscorable[0m
+[49/129] fastapi_9753: [92mscorable[0m
+[50/129] fastapi_14430: [92mscorable[0m
+[51/129] fastapi_5077: [93mNOT scorable here[0m - exit 5
+[52/129] fastapi_9555: [92mscorable[0m
+[53/129] fastapi_14361: [92mscorable[0m
+[54/129] fastapi_13207: [92mscorable[0m
+[55/129] fastapi_14360: [92mscorable[0m
+[56/129] fastapi_14356: [92mscorable[0m
+[57/129] fastapi_5624: [92mscorable[0m
+[58/129] fastapi_14419: [92mscorable[0m
+[59/129] fastapi_14301: [92mscorable[0m
+[60/129] fastapi_14262: [92mscorable[0m
+[61/129] fastapi_14266: [92mscorable[0m
+[62/129] fastapi_14246: [92mscorable[0m
+[63/129] fastapi_14186: [92mscorable[0m
+[64/129] fastapi_9425: [92mscorable[0m
+[65/129] fastapi_13713: [93mNOT scorable here[0m - exit 5
+[66/129] fastapi_14077: [92mscorable[0m
+[67/129] rich_3718: [92mscorable[0m
+[68/129] rich_3934: [92mscorable[0m
+[69/129] rich_3953: [92mscorable[0m
+[70/129] rich_3944: [92mscorable[0m
+[71/129] rich_3942: [93mNOT scorable here[0m - exit 5
+[72/129] rich_3938: [92mscorable[0m
+[73/129] rich_3882: [92mscorable[0m
+[74/129] rich_3894: [92mscorable[0m
+[75/129] rich_3935: [92mscorable[0m
+[76/129] rich_3905: [92mscorable[0m
+[77/129] rich_3930: [92mscorable[0m
+[78/129] httpx_3672: [92mscorable[0m
+[79/129] fastapi_14791: [93mNOT scorable here[0m - ERROR tests/test_additional_properties.py - RuntimeError: The starlette.testc...
+[80/129] fastapi_15800: [93mNOT scorable here[0m - ERROR tests/test_frontend.py - RuntimeError: The starlette.testclient module ...
+[81/129] fastapi_15785: [93mNOT scorable here[0m - ERROR tests/test_router_include_context.py - RuntimeError: The starlette.test...
+[82/129] fastapi_14371: [92mscorable[0m
+[83/129] fastapi_14605: [93mNOT scorable here[0m - exit 5
+[84/129] fastapi_15763: [93mNOT scorable here[0m - ERROR tests/test_router_include_context.py - RuntimeError: The starlette.test...
+[85/129] fastapi_14583: [93mNOT scorable here[0m - exit 5
+[86/129] fastapi_15745: [93mNOT scorable here[0m - ERROR tests/test_custom_route_class.py - RuntimeError: The starlette.testclie...
+[87/129] fastapi_14297: [92mscorable[0m
+[88/129] fastapi_14303: [92mscorable[0m
+[89/129] fastapi_13537: [92mscorable[0m
+[90/129] fastapi_14953: [93mNOT scorable here[0m - ERROR tests/test_request_params/test_file/test_list.py - RuntimeError: The st...
+[91/129] fastapi_13786: [92mscorable[0m
+[92/129] fastapi_14616: [93mNOT scorable here[0m - ERROR tests/test_json_type.py - RuntimeError: The starlette.testclient module...
+[93/129] fastapi_11194: [92mscorable[0m
+[94/129] requests_6757: [93mNOT scorable here[0m - exit 1
+[95/129] requests_6629: [93mNOT scorable here[0m - E       Failed: DID NOT RAISE <class 'requests.exceptions.InvalidURL'>
+[96/129] requests_6644: [92mscorable[0m
+[97/129] requests_6589: [93mNOT scorable here[0m - E       Failed: DID NOT RAISE <class 'requests.exceptions.InvalidURL'>
+[98/129] requests_6592: [93mNOT scorable here[0m - exit 1
+[99/129] rich_3180: [92mscorable[0m
+[100/129] rich_3486: [92mscorable[0m
+[101/129] rich_3777: [92mscorable[0m
+[102/129] rich_3468: [92mscorable[0m
+[103/129] rich_3782: [93mNOT scorable here[0m - exit 1
+[104/129] rich_3772: [92mscorable[0m
+[105/129] rich_3296: [93mNOT scorable here[0m - E       AssertionError: assert '\x1b[
+[106/129] rich_3675: [92mscorable[0m
+[107/129] rich_3676: [92mscorable[0m
+[108/129] rich_3518: [92mscorable[0m
+[109/129] rich_3535: [92mscorable[0m
+[110/129] rich_3521: [92mscorable[0m
+[111/129] rich_3506: [92mscorable[0m
+[112/129] rich_3480: [92mscorable[0m
+[113/129] rich_3472: [92mscorable[0m
+[114/129] rich_3454: [92mscorable[0m
+[115/129] rich_3471: [92mscorable[0m
+[116/129] rich_3470: [92mscorable[0m
+[117/129] rich_3469: [93mNOT scorable here[0m - E         ?           ^^^ ^^^ ^^^
+[118/129] rich_3052: [92mscorable[0m
+[119/129] rich_3278: [92mscorable[0m
+[120/129] rich_2943: [92mscorable[0m
+[121/129] rich_2725: [92mscorable[0m
+[122/129] rich_3105: [92mscorable[0m
+[123/129] rich_3130: [93mNOT scorable here[0m - exit 1
+[124/129] rich_3043: [92mscorable[0m
+[125/129] rich_3067: [92mscorable[0m
+[126/129] rich_3006: [92mscorable[0m
+[127/129] rich_3064: [93mNOT scorable here[0m - exit 1
+[128/129] rich_3063: [92mscorable[0m
+[129/129] rich_3061: [92mscorable[0m
+
+========================================================================
+  scorable: [92m92[0m / 129   not scorable: [93m37[0m
+========================================================================
+  - fastapi_15661: ERROR tests/test_prepare_release.py
+  - fastapi_15588: ERROR tests/test_sse.py - RuntimeError: The starlette.testclient module requi...
+  - fastapi_15589: ERROR tests/test_query_cookie_header_model_extra_params.py - RuntimeError: Th...
+  - fastapi_15030: ERROR tests/test_sse.py - RuntimeError: The starlette.testclient module requi...
+  - fastapi_14962: ERROR tests/test_dump_json_fast_path.py - RuntimeError: The starlette.testcli...
+  - fastapi_14964: ERROR tests/test_deprecated_responses.py - RuntimeError: The starlette.testcl...
+  - fastapi_15023: ERROR tests/test_tutorial/test_stream_data/test_tutorial002.py - RuntimeError...
+  - fastapi_14986: ERROR tests/test_openapi_cache_root_path.py - RuntimeError: The starlette.tes...
+  - fastapi_14978: ERROR tests/test_strict_content_type_app_level.py - RuntimeError: The starlet...
+  - rich_4079: E         - [0m[38;2;248;248;242;48;2;39;40;34mprint[0m[38;2;248;248;242;48;2;39;4
+  - fastapi_14851: ERROR tests/test_router_events.py - RuntimeError: The starlette.testclient mo...
+  - fastapi_14873: ERROR tests/test_router_events.py - RuntimeError: The starlette.testclient mo...
+  - fastapi_13920: ERROR tests/test_dependency_pep695.py - RuntimeError: The starlette.testclien...
+  - fastapi_14794: ERROR tests/test_response_dependency.py - RuntimeError: The starlette.testcli...
+  - fastapi_14786: ERROR tests/test_security_http_base.py - RuntimeError: The starlette.testclie...
+  - fastapi_14492: ERROR tests/test_tutorial/test_metadata/test_tutorial001_1.py - RuntimeError:...
+  - fastapi_5077: exit 5
+  - fastapi_13713: exit 5
+  - rich_3942: exit 5
+  - fastapi_14791: ERROR tests/test_additional_properties.py - RuntimeError: The starlette.testc...
+  - fastapi_15800: ERROR tests/test_frontend.py - RuntimeError: The starlette.testclient module ...
+  - fastapi_15785: ERROR tests/test_router_include_context.py - RuntimeError: The starlette.test...
+  - fastapi_14605: exit 5
+  - fastapi_15763: ERROR tests/test_router_include_context.py - RuntimeError: The starlette.test...
+  - fastapi_14583: exit 5
+  - fastapi_15745: ERROR tests/test_custom_route_class.py - RuntimeError: The starlette.testclie...
+  - fastapi_14953: ERROR tests/test_request_params/test_file/test_list.py - RuntimeError: The st...
+  - fastapi_14616: ERROR tests/test_json_type.py - RuntimeError: The starlette.testclient module...
+  - requests_6757: exit 1
+  - requests_6629: E       Failed: DID NOT RAISE <class 'requests.exceptions.InvalidURL'>
+  - requests_6589: E       Failed: DID NOT RAISE <class 'requests.exceptions.InvalidURL'>
+  - requests_6592: exit 1
+  - rich_3782: exit 1
+  - rich_3296: E       AssertionError: assert '\x1b[
+  - rich_3469: E         ?           ^^^ ^^^ ^^^
+  - rich_3130: exit 1
+  - rich_3064: exit 1
+
+Wrote validated eval set to experiments/eval_sets/all_scorable_v3.json (92 tasks)

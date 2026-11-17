@@ -1,0 +1,13 @@
+diff --git a/fastapi/security/api_key.py b/fastapi/security/api_key.py
+index 496c815a..3d9b2bf3 100644
+--- a/fastapi/security/api_key.py
++++ b/fastapi/security/api_key.py
+@@ -15,7 +15,7 @@ class APIKeyBase(SecurityBase):
+         if not api_key:
+             if auto_error:
+                 raise HTTPException(
+-                    status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
++                    status_code=HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+                 )
+             return None
+         return api_key

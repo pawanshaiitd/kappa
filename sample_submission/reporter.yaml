@@ -1,0 +1,6 @@
+name: reporter
+description: Tool-less hand-off step. Reads the locator's exploration and writes the fixed six-line location report. It has no tools, so it always ends after exactly one reply.
+model: gemma-4-31b-it-qat-w4a16-ct
+instruction: !include prompts/reporter.md
+output_key: location
+generate_content_config: !include configs/sampling_report.yaml

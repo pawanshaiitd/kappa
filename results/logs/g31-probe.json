@@ -1,0 +1,16 @@
+{
+  "api_base": "http://10.120.12.55:8000/v1",
+  "model": "google/gemma-4-31B-it-qat-w4a16-ct",
+  "models": [
+    "google/gemma-4-31B-it-qat-w4a16-ct"
+  ],
+  "max_model_len": 256000,
+  "tool_call_seconds": 1.67,
+  "tool_call_parsed": true,
+  "tool_call_raw_text": "",
+  "decode_tps": 10.6,
+  "prefill_tps": 45125.3
+}
+
+Use these for the simulated clock:
+  --sim-prefill-tps 45125.3 --sim-decode-tps 10.6

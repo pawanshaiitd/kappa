@@ -1,11 +1,8 @@
-"""Automated Benchmark Suite for the Mature Coding Harness.
+"""Submission compliance tests.
 
-Evaluates the coding harness across:
-1. Declarative Submission Compliance
-2. 5 Crucial Core Components (Context, Multi-Agent, Security, Verification, Skills)
-3. Memory & ASR Schema Integrity
-4. 3-Tier Surgical Matcher Precision & Error Handling
-5. Real SWE-bench Task Symbol Navigation
+1. Both shippable submissions validate, declare one allowed model and pass the time-safety guard.
+2. The shipped pipeline has the intended structure and session-state hand-off.
+3. The 3-tier edit matcher and the per-task test environment resolver behave as documented.
 """
 
 import sys
@@ -24,110 +21,72 @@ from scripts.validate_submission import validate_submission_dir, custom_yaml_loa
 from scripts.harness_tools import apply_replacement_3tier, FileEditError
 
 SUBMISSION_DIR = REPO_ROOT / "sample_submission"
+# Both shippable variants: the three-step pipeline and the single lean agent.
+SUBMISSION_DIRS = [REPO_ROOT / "sample_submission", REPO_ROOT / "sample_submission_lean"]
+DECLARED_MODEL = "gemma-4-31b-it-qat-w4a16-ct"
 
 
-def test_submission_compliance_benchmark():
-    """Validates that sample_submission satisfies all competition harness rules."""
-    res = validate_submission_dir(SUBMISSION_DIR)
+@pytest.mark.parametrize("sub_dir", SUBMISSION_DIRS, ids=lambda p: p.name)
+def test_submission_compliance_benchmark(sub_dir):
+    """Each shippable submission satisfies the competition rules and the time-safety guard."""
+    res = validate_submission_dir(sub_dir)
     assert res["valid"] is True, f"Submission validation failed: {res.get('error')}"
-    assert res["declared_model"] == "gemma-4-31b-it-qat-w4a16-ct"
+    assert res["declared_model"] == DECLARED_MODEL
     assert res["total_size_mb"] < 3072.0  # < 3 GiB
 
 
-def test_core_components_presence():
-    """Validates that all 5 crucial core components exist with proper structure."""
-    expected_dirs = ["rules", "tools", "memory", "asr", "skills", "prompts", "sub_agents", "configs"]
-    for d in expected_dirs:
-        p = SUBMISSION_DIR / d
-        assert p.is_dir(), f"Missing core component directory: {d}"
+@pytest.mark.parametrize("sub_dir", SUBMISSION_DIRS, ids=lambda p: p.name)
+def test_only_live_files_are_shipped(sub_dir):
+    """Everything in the zip is reachable from agent.yaml; nothing else rides along.
 
-    # Rules
-    assert (SUBMISSION_DIR / "rules" / "python_standards.md").exists()
-    assert (SUBMISSION_DIR / "rules" / "test_isolation.md").exists()
-    assert (SUBMISSION_DIR / "rules" / "file_editing.md").exists()
-    assert (SUBMISSION_DIR / "rules" / "patch_hygiene.md").exists()
-
-    # Tools
-    assert (SUBMISSION_DIR / "tools" / "README.md").exists()
-    assert (SUBMISSION_DIR / "tools" / "tool_schemas.json").exists()
-    assert (SUBMISSION_DIR / "tools" / "execution" / "run_command.md").exists()
-    assert (SUBMISSION_DIR / "tools" / "execution" / "submit_patch.md").exists()
-    assert (SUBMISSION_DIR / "tools" / "workspace" / "read_file.md").exists()
-    assert (SUBMISSION_DIR / "tools" / "workspace" / "edit_file.md").exists()
-    assert (SUBMISSION_DIR / "tools" / "workspace" / "write_file.md").exists()
-    assert (SUBMISSION_DIR / "tools" / "graph" / "code_intelligence.md").exists()
-
-    # Memory
-    assert (SUBMISSION_DIR / "memory" / "README.md").exists()
-    assert (SUBMISSION_DIR / "memory" / "session_state.md").exists()
-    assert (SUBMISSION_DIR / "memory" / "trajectory_cache.json").exists()
-    assert (SUBMISSION_DIR / "memory" / "memory_schema.json").exists()
-
-    # ASR
-    assert (SUBMISSION_DIR / "asr" / "README.md").exists()
-    assert (SUBMISSION_DIR / "asr" / "audio_spec.md").exists()
-    assert (SUBMISSION_DIR / "asr" / "transcription_pipeline.md").exists()
-    assert (SUBMISSION_DIR / "asr" / "audio_schema.json").exists()
-
-    # Skills: ADK requires kebab-case names that equal the directory name.
-    for skill_name in ["repo-navigation", "code-intelligence", "precision-editing", "test-verification"]:
-        sk_path = SUBMISSION_DIR / "skills" / skill_name
-        assert (sk_path / "SKILL.md").exists(), f"Missing skill: {skill_name}"
-
-    # adapters/ must be absent: any subdirectory there switches LoRA on in vLLM, and an
-    # untrained placeholder adapter can stop the inference server from starting at all.
-    adapters = SUBMISSION_DIR / "adapters"
-    if adapters.is_dir():
-        real = [d for d in adapters.iterdir() if d.is_dir()]
-        assert not real, f"Untrained/unverified adapters present: {[d.name for d in real]}"
+    Unreferenced agent YAMLs are read by the scorer's model discovery, adapters/ switches LoRA
+    on in vLLM, and docs only add size. Keep the directory to config, prompts and eval budget.
+    """
+    allowed_top = {"agent.yaml", "eval_config.yaml", "configs", "prompts",
+                   "locator.yaml", "reporter.yaml", "fixer.yaml", "verifier.yaml"}
+    present = {p.name for p in sub_dir.iterdir() if not p.name.startswith(".")}
+    assert present <= allowed_top, f"unexpected entries in {sub_dir.name}: {sorted(present - allowed_top)}"
+    assert not (sub_dir / "adapters").exists()
 
 
-def test_tool_schemas_validity():
-    """Validates that tool_schemas.json is valid JSON and defines all 9 tools."""
-    schemas_file = SUBMISSION_DIR / "tools" / "tool_schemas.json"
-    data = json.loads(schemas_file.read_text(encoding="utf-8"))
-    required_tools = [
-        "run_command", "read_file", "edit_file", "write_file",
-        "submit_patch", "get_status", "search_similar_code",
-        "get_code_neighbors", "get_code_subgraph"
-    ]
-    for tool in required_tools:
-        assert tool in data, f"Missing tool schema: {tool}"
-        assert data[tool]["type"] == "object"
+def test_time_safety_guard_rejects_a_slow_submission(tmp_path):
+    """The mistake behind the 18 h timeout must not validate again."""
+    from scripts.validate_submission import time_safety_problems
+
+    (tmp_path / "eval_config.yaml").write_text(
+        "evaluation:\n  max_time_minutes: 60\n", encoding="utf-8")
+    (tmp_path / "sampling.yaml").write_text("max_output_tokens: 6144\n", encoding="utf-8")
+    problems = time_safety_problems(tmp_path)
+    assert any("max_time_minutes" in p for p in problems)
+    assert any("max_output_tokens" in p for p in problems)
+    for sub_dir in SUBMISSION_DIRS:
+        assert time_safety_problems(sub_dir) == []
 
 
-def test_memory_and_asr_json_validity():
-    """Validates memory and ASR json configurations."""
-    mem_cache = json.loads((SUBMISSION_DIR / "memory" / "trajectory_cache.json").read_text(encoding="utf-8"))
-    assert "distilled_lessons" in mem_cache
-    assert len(mem_cache["distilled_lessons"]) >= 4
+def test_pipeline_structure():
+    """The shipped tree: locator -> reporter -> fixer -> verifier with state hand-off."""
+    from scripts.submission_harness import Submission
 
-    mem_schema = json.loads((SUBMISSION_DIR / "memory" / "memory_schema.json").read_text(encoding="utf-8"))
-    assert mem_schema["type"] == "object"
-
-    asr_schema = json.loads((SUBMISSION_DIR / "asr" / "audio_schema.json").read_text(encoding="utf-8"))
-    assert asr_schema["type"] == "object"
-
-
-def test_agent_yaml_structure_and_skills():
-    """Validates agent.yaml root config and sub-agent bindings."""
-    loader_cls = custom_yaml_loader(SUBMISSION_DIR)
-    agent_file = SUBMISSION_DIR / "agent.yaml"
-    with open(agent_file, "r", encoding="utf-8") as f:
-        loader = loader_cls(f)
-        loader.name = str(agent_file)
-        agent_yaml = loader.get_data()
-
-    assert agent_yaml["name"] == "mkpro_coordinator"
-    assert agent_yaml["model"] == "gemma-4-31b-it-qat-w4a16-ct"
-    assert len(agent_yaml["skills"]) == 4
-
-    # Check sub-agents exist
-    for sub in agent_yaml.get("tools", []):
-        if isinstance(sub, dict) and "agent_tool" in sub:
-            cfg = sub["agent_tool"]["config_path"]
-            sub_file = SUBMISSION_DIR / cfg
-            assert sub_file.exists(), f"Declared sub-agent file not found: {cfg}"
+    sub = Submission(SUBMISSION_DIR)
+    assert sub.validate() == []
+    root = sub.root
+    assert root.agent_class == "SequentialAgent"
+    assert [a.name for a in root.sub_agents] == ["locator", "reporter", "fixer", "verifier"]
+    locator, reporter, fixer, verifier = root.sub_agents
+    assert reporter.output_key == "location" and fixer.output_key == "fix_summary"
+    # The reporter has no tools, so it always ends after one reply: the hand-off is forced.
+    assert reporter.tool_names == [] and reporter.include_contents != "none"
+    assert reporter.gen_cfg["thinking_config"]["thinking_budget"] == 0
+    assert fixer.include_contents == "none" and verifier.include_contents == "none"
+    # Only the last step can end the session, and the read-only step cannot edit.
+    assert "submit_patch" in verifier.tool_names
+    assert "submit_patch" not in locator.tool_names + fixer.tool_names + reporter.tool_names
+    assert not {"edit_file", "write_file"} & set(locator.tool_names)
+    for a in root.sub_agents:
+        assert len(a.tool_names) <= 5, f"{a.name} declares too many tools"
+        assert len(a.instruction) <= 4000, f"{a.name} instruction is {len(a.instruction)} chars"
+    assert ("location", True) in fixer.state_keys_used()
+    assert ("problem_description", False) in fixer.state_keys_used()
 
 
 def test_matcher_benchmark_suite():
@@ -163,33 +122,9 @@ def test_matcher_benchmark_suite():
         apply_replacement_3tier(dup_source, "pass", "return True", allow_multiple=False)
 
 
-def test_skills_load_with_adk_rules():
-    """Skill frontmatter must satisfy ADK: kebab-case name == directory name, and a description.
-
-    ADK rejects snake_case skill names unless the SNAKE_CASE_SKILL_NAME feature flag is on,
-    and a rejected skill fails submission compilation, which zeroes every task.
-    """
-    import yaml
-
-    skills_dir = SUBMISSION_DIR / "skills"
-    found = sorted(d for d in skills_dir.iterdir() if d.is_dir())
-    assert found, "no skills found"
-    for d in found:
-        md = d / "SKILL.md"
-        assert md.exists(), f"{d.name}: no SKILL.md"
-        text = md.read_text(encoding="utf-8")
-        assert text.startswith("---"), f"{d.name}: no YAML frontmatter"
-        fm = yaml.safe_load(text.split("---", 2)[1]) or {}
-        name = fm.get("name", "")
-        assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name), f"{d.name}: name {name!r} not kebab-case"
-        assert name == d.name, f"directory {d.name!r} != frontmatter name {name!r}"
-        assert fm.get("description"), f"{d.name}: no description"
-        assert not (d / "resources").is_dir(), f"{d.name}: ADK reads references/, not resources/"
-
-
 def test_no_parent_traversal_in_includes():
     """`!include ../x.md` has a '..' component, which the submission loader rejects."""
-    for y in sorted(SUBMISSION_DIR.rglob("*.yaml")):
+    for y in sorted(p for d in SUBMISSION_DIRS for p in d.rglob("*.yaml")):
         for i, line in enumerate(y.read_text(encoding="utf-8").splitlines(), 1):
             if line.lstrip().startswith("#"):
                 continue  # a comment mentioning !include is not a directive
@@ -199,24 +134,45 @@ def test_no_parent_traversal_in_includes():
                 assert not target.startswith("/"), f"{y.name}:{i} absolute !include: {target}"
 
 
-def test_single_declared_model_across_tree():
-    """Every agent YAML must declare the same model, from the allowed competition list."""
-    import yaml
-
-    allowed = {
-        "gemma-4-31b-it-qat-w4a16-ct",
-        "gemma-4-12b-it-qat-w4a16-ct",
-        "gemma-4-e4b-it-qat-w4a16-ct",
-        "gemma-4-e2b-it-qat-w4a16-ct",
-    }
+@pytest.mark.parametrize("sub_dir", SUBMISSION_DIRS, ids=lambda p: p.name)
+def test_single_declared_model_across_tree(sub_dir):
+    """Every YAML in the directory, referenced or not, declares the same allowed model."""
     models = set()
-    for y in [SUBMISSION_DIR / "agent.yaml", *sorted((SUBMISSION_DIR / "sub_agents").glob("*.yaml"))]:
-        raw = y.read_text(encoding="utf-8")
-        for line in raw.splitlines():
+    for y in sorted(sub_dir.rglob("*.yaml")):
+        for line in y.read_text(encoding="utf-8").splitlines():
             if line.startswith("model:"):
                 models.add(line.split(":", 1)[1].strip().split("/")[-1])
-    assert len(models) == 1, f"multiple base models declared: {sorted(models)}"
-    assert models <= allowed, f"model not permitted: {models}"
+    assert models == {DECLARED_MODEL}, f"declared models: {sorted(models)}"
+
+
+@pytest.mark.parametrize("sub_dir", SUBMISSION_DIRS, ids=lambda p: p.name)
+def test_prompts_have_no_stray_braces(sub_dir):
+    """ADK templates {name} in instructions; an unknown key aborts the task with KeyError."""
+    known = {"problem_description", "hints", "location", "fix_summary"}
+    for md in sorted((sub_dir / "prompts").glob("*.md")):
+        for name in re.findall(r"\{([^{}\n]*)\}", md.read_text(encoding="utf-8")):
+            assert name.rstrip("?") in known, f"{md.name}: {{{name}}} is not a session-state key"
+
+
+def test_real_adk_accepts_the_agent_tree():
+    """Build the tree with the real ADK classes when google-adk is installed (it is on the server)."""
+    pytest.importorskip("google.adk")
+    from google.adk.agents import LlmAgent, SequentialAgent
+
+    from scripts.submission_harness import Submission
+
+    def build(spec):
+        if spec.agent_class == "SequentialAgent":
+            return SequentialAgent(name=spec.name, sub_agents=[build(s) for s in spec.sub_agents])
+        kwargs = dict(name=spec.name, model=spec.model, instruction=spec.instruction,
+                      description=spec.description, include_contents=spec.include_contents)
+        if spec.output_key:
+            kwargs["output_key"] = spec.output_key
+        return LlmAgent(**kwargs)
+
+    for sub_dir in SUBMISSION_DIRS:
+        agent = build(Submission(sub_dir).root)
+        assert agent.name
 
 
 # --- Per-task test environment resolution (scripts/test_envs.py) ---------------------------

@@ -1,155 +1,219 @@
-# Runbook — running the benchmark on a server
+# Runbook — iteration 3, on the server
 
-Everything here is runnable without the Kaggle hardware. Step 0 needs no model; steps 3+ need either
-a Gemini key or a local OpenAI-compatible endpoint serving Gemma 4.
+Every command here runs on the server (the Gemini key and the Gemma endpoint are only reachable
+there). `$PY` is the interpreter, normally `.venv/bin/python`.
 
-Replace `$PY` with your interpreter (`.venv/bin/python` locally).
+What is being tested:
 
----
+| Directory | What it is |
+|---|---|
+| `sample_submission/` | **pipeline**: `SequentialAgent` locator → fixer → verifier, 12B |
+| `sample_submission_lean/` | **lean**: one agent, 4 tools, same budgets — the fallback |
+| `archive/submission_v2/` | the submission that timed out, kept as the baseline |
 
-## 0. One-time setup on the machine
-
-```bash
-export GOOGLE_API_KEY="..."      # or GEMINI_API_KEY; not needed for steps 1-2
-$PY -m pip install -r <your deps>   # pyyaml, pyarrow, numpy, networkx, pytest
-```
-
-Check the key actually works from **that machine's** IP before starting a sweep — an API key with an
-IP-address restriction fails every call with HTTP 403, and a sweep then reports a meaningless 0.000:
-
-```bash
-curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$GOOGLE_API_KEY" \
-  -H 'Content-Type: application/json' -d '{"contents":[{"role":"user","parts":[{"text":"say ok"}]}]}'
-```
+The answer you need before zipping is two numbers per variant: the **resolution rate** and the
+**projected notebook hours**. Both are printed at the end of every run.
 
 ---
 
-## 1. Find which tasks the machine can score  *(no model calls)*
-
-Runs each task's own **reference** patch through Phase 2. If the official fix fails, that task cannot
-be scored there and must be excluded rather than blamed on the agent. Takes ~45-90 min for 129 tasks,
-mostly building test venvs.
+## 0. Setup and sanity (no model calls)
 
 ```bash
-$PY scripts/run_experiment.py --validate-eval-set \
-    --out-eval-set experiments/eval_sets/all_scorable.json
+export GOOGLE_API_KEY="..."
 ```
-
-Expect roughly 95/129 scorable. A much lower number means the test environments are not building —
-check with `$PY scripts/test_envs.py --list`.
-
-## 2. Draw an eval set in the real repo proportions  *(instant)*
 
 ```bash
-$PY scripts/run_experiment.py --make-eval-set 30 \
-    --from-pool experiments/eval_sets/all_scorable.json --match-distribution \
-    --eval-set experiments/eval_sets/set30_matched.json
+PYTHONPATH=. $PY -m pytest tests/ -q
 ```
-
-Proportions come from the full task file (52% fastapi / 37% rich / 10% requests), not from the
-scorable pool, so the machine's own limitations are not baked into every later comparison.
-
-## 3. Warm the test venvs  *(no model calls)*
-
-Do this before spending tokens: building a venv mid-sweep is slow, and a transient index failure
-would otherwise cost that task.
 
 ```bash
-$PY scripts/run_experiment.py --name prep --prebuild-envs \
-    --eval-set experiments/eval_sets/set30_matched.json
+$PY scripts/validate_submission.py sample_submission sample_submission_lean
 ```
 
-Must end with `All environments ready.`
-
-## 4. The baseline  — **this is the command you asked for**
+Both must print `[PASS]`. The validator now fails any submission whose per-task cap could run past
+the 18 h notebook limit.
 
 ```bash
-$PY -u scripts/run_experiment.py --name baseline \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
+$PY scripts/submission_harness.py --dry-run --task-id fastapi_15589
 ```
 
-~2-3 hours for 30 tasks against `gemini-2.5-flash`. Add `-u` (unbuffered) when backgrounding, or the
-log looks empty until it finishes. Results land in `results/experiments/baseline/`
-(`summary.json`, `task_results.jsonl`, `patches/`).
+Prints the compiled tree and, per agent, how many tokens are sent on every request.
 
-Against real Gemma on a vLLM host instead:
+## 1. Rebuild the eval sets (no model calls, ~1 h)
+
+The patch-extraction and environment fixes change which tasks this machine can score, and
+`fastapi_15588` / `fastapi_15661` in the old set were not scorable at all.
 
 ```bash
-$PY -u scripts/run_experiment.py --name baseline-31b \
-    --backend openai --api-base http://127.0.0.1:8000/v1 \
-    --model gemma-4-31b-it-qat-w4a16-ct \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
+$PY scripts/run_experiment.py --validate-eval-set --out-eval-set experiments/eval_sets/all_scorable.json
 ```
 
-## 5. Read the result
+```bash
+$PY scripts/run_experiment.py --make-eval-set 30 --from-pool experiments/eval_sets/all_scorable.json --match-distribution --eval-set experiments/eval_sets/set30_a.json
+```
+
+```bash
+$PY scripts/run_experiment.py --make-eval-set 30 --seed 11 --from-pool experiments/eval_sets/all_scorable.json --exclude-set experiments/eval_sets/set30_a.json --match-distribution --eval-set experiments/eval_sets/set30_b.json
+```
+
+`set30_a` is for tuning, `set30_b` is touched only to confirm the winner.
+
+```bash
+$PY scripts/run_experiment.py --name prep --prebuild-envs --eval-set experiments/eval_sets/set30_a.json
+```
+
+```bash
+$PY scripts/run_experiment.py --name prep --prebuild-envs --eval-set experiments/eval_sets/set30_b.json
+```
+
+Both must end with `All environments ready.` Build environments before using `--workers`.
+
+## 2. The experiments
+
+`--workers 4` runs four tasks at once against Gemini. `--resume` continues an interrupted run.
+`--sim gemma12b` replaces the wall clock with a projected Gemma clock, so the 3-minute cap binds the
+way it will on 4×L4. The preset speeds (1000 prompt tok/s, 20 output tok/s) are **assumptions**;
+replace them with measured values from step 4 as soon as the endpoint is up.
+
+**E1 — old submission on the fixed rig** (new baseline; shows how many of the 300 failed commands
+were the rig's fault):
+
+```bash
+$PY -u scripts/run_experiment.py --name e1-v2-baseline --submission-dir archive/submission_v2 --eval-set experiments/eval_sets/set30_a.json --workers 4 --quiet
+```
+
+**E2 — both new variants, no clock simulation** (quality only):
+
+```bash
+$PY -u scripts/run_experiment.py --name e2-pipeline --eval-set experiments/eval_sets/set30_a.json --max-time-minutes 30 --workers 4 --quiet
+```
+
+```bash
+$PY -u scripts/run_experiment.py --name e2-lean --submission-dir sample_submission_lean --eval-set experiments/eval_sets/set30_a.json --max-time-minutes 30 --workers 4 --quiet
+```
+
+**E3 — both variants exactly as shipped, on the simulated Gemma clock** (does it fit 18 h):
+
+```bash
+$PY -u scripts/run_experiment.py --name e3-pipeline-sim --eval-set experiments/eval_sets/set30_a.json --sim gemma12b --workers 4 --quiet
+```
+
+```bash
+$PY -u scripts/run_experiment.py --name e3-lean-sim --submission-dir sample_submission_lean --eval-set experiments/eval_sets/set30_a.json --sim gemma12b --workers 4 --quiet
+```
+
+**E4 — one variable at a time, on the better variant** (add `--submission-dir sample_submission_lean`
+if lean won):
+
+```bash
+$PY -u scripts/run_experiment.py --name e4-think0 --thinking-budget 0 --eval-set experiments/eval_sets/set30_a.json --sim gemma12b --workers 4 --quiet
+```
+
+```bash
+$PY -u scripts/run_experiment.py --name e4-think1024 --thinking-budget 1024 --eval-set experiments/eval_sets/set30_a.json --sim gemma12b --workers 4 --quiet
+```
+
+```bash
+$PY -u scripts/run_experiment.py --name e4-no-cards --drop-section "Repo notes" --eval-set experiments/eval_sets/set30_a.json --sim gemma12b --workers 4 --quiet
+```
+
+**Confirm the winner on the untouched set:**
+
+```bash
+$PY -u scripts/run_experiment.py --name e5-confirm --eval-set experiments/eval_sets/set30_b.json --sim gemma12b --workers 4 --quiet
+```
+
+## 3. Reading a result
 
 ```bash
 $PY scripts/run_experiment.py --compare
 ```
 
-Judge by `failure_buckets` and `failing_commands`, not the rate alone — at 30 tasks a one- or
-two-task difference is noise. Record every run in `sample_submission/IMPROVEMENT_PLAN.md` §9,
-including negative results.
-
-## 6. The experiment queue
-
-Run one at a time, each against the same eval set, comparing to `baseline`:
-
 ```bash
-# topology: four AgentTool hops share one budget and cannot see the problem statement
-$PY -u scripts/run_experiment.py --name no-subagents --no-subagents \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
-
-# prompt: a worked grep->read->edit transcript, aimed at the FileEditError mode
-$PY -u scripts/run_experiment.py --name prompt-fewshot \
-    --system-prompt experiments/prompt_variants/system_fewshot.md \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
-
-# prompt: 31 lines instead of 130 - small models often follow short prompts better
-$PY -u scripts/run_experiment.py --name prompt-short \
-    --system-prompt experiments/prompt_variants/system_short.md \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
-
-# surfaces that two live runs never once used
-$PY -u scripts/run_experiment.py --name no-graph --no-graph-tools \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
-$PY -u scripts/run_experiment.py --name no-skills --no-skills \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
-
-# model choice - real Gemma only; likely the single biggest lever
-$PY -u scripts/run_experiment.py --name model-12b \
-    --declare-model gemma-4-12b-it-qat-w4a16-ct \
-    --backend openai --api-base http://127.0.0.1:8000/v1 \
-    --eval-set experiments/eval_sets/set30_matched.json --quiet
+$PY scripts/run_experiment.py --analyze e3-pipeline-sim
 ```
 
-Gemini measures prompt and workflow quality only: its function calling is far more forgiving than
-vLLM's `gemma4` tool parser, so sampling and model decisions need a real Gemma endpoint.
+`--analyze` prints the failure taxonomy, how sessions ended, the import errors found in Phase 2, the
+error rate per tool, the commands that fail most, repeated identical calls, and the slowest tasks.
+Per-task traces (every model request and tool call with token counts) are in
+`results/experiments/<name>/traces/`.
 
----
+| Summary line | Accept when |
+|---|---|
+| `resolution rate` | E2 ≥ E1; ship the variant with the higher E3 rate |
+| `failure buckets: patch_breaks_import` | ≤ 2 of 30 (it was 9) |
+| `context: max prompt` | under 12 000 tokens, `compactions=0` |
+| `notebook (18 h): 300 tasks` | ≤ 12 h (printed red above 15 h) |
+| `end reasons: time_budget_exhausted` | a minority; if most tasks end this way, lower `thinking_budget` before raising the cap |
+| `failing commands` | under 60 in total; anything frequent becomes a prompt fix |
 
-## Debugging a single task
+At 30 tasks a difference of one or two tasks is noise. Judge by the buckets.
+
+## 4. When the Gemma endpoint is up
+
+The default endpoint is `http://10.120.12.55:8000/v1`. Override it with `--api-base` or once with:
 
 ```bash
-$PY scripts/submission_harness.py --dry-run --task-id <id>                  # compile + validate only
-$PY scripts/submission_harness.py --task-id <id> --auto --backend mock      # loop, no API
-$PY scripts/submission_harness.py --task-id <id> --auto --verify            # one real run
-$PY scripts/submission_harness.py --task-id <id> --verify-patch <file>.patch # Phase 2 only
-$PY scripts/submission_harness.py --task-id <id>                            # interactive REPL
-$PY scripts/test_envs.py --snapshot snapshots/<id>.tgz --repo <owner/name>  # resolved pins
+export SWE_API_BASE="http://HOST:PORT/v1"
 ```
 
-`--test-env shared` on either script restores the old single-venv behaviour, for comparison.
-
-## Before submitting
+Check it and measure its speed:
 
 ```bash
-PYTHONPATH=. $PY -m pytest tests/ -q                       # 21 tests
-$PY scripts/submission_harness.py --dry-run --task-id <id>  # "Validation clean"
+$PY scripts/submission_harness.py --probe-endpoint
+```
+
+This lists the served models, makes one tool-call round trip, and prints measured `prefill_tps` and
+`decode_tps`. `tool_call_parsed: false` means vLLM is not running with
+`--enable-auto-tool-choice --tool-call-parser gemma4`; fix that before anything else.
+
+Run the shipped submission on real Gemma, one task at a time:
+
+```bash
+$PY -u scripts/run_experiment.py --name e6-gemma12b --backend openai --eval-set experiments/eval_sets/set30_a.json --quiet
+```
+
+The model name sent is the one the submission declares; pass `--model NAME` if the server uses a
+different id. That server is not 4×L4, so also re-run E3 with the measured speeds scaled to what you
+expect on the scorer:
+
+```bash
+$PY -u scripts/run_experiment.py --name e3-measured --eval-set experiments/eval_sets/set30_a.json --sim-prefill-tps 1500 --sim-decode-tps 30 --workers 4 --quiet
+```
+
+If an endpoint rejects vLLM-only request fields, set `SWE_OPENAI_PLAIN=1`.
+
+## 5. Debugging one task
+
+```bash
+$PY scripts/submission_harness.py --task-id rich_3930 --auto --verify --sim gemma12b
+```
+
+```bash
+$PY scripts/submission_harness.py --task-id rich_3930
+```
+
+The second form is the interactive REPL (`/auto`, `/diff`, `/status`, `/tools`, `/tree`, `/prompt`,
+`/run`, `/cat`, `/verify`, `/reset`). `--submission-dir sample_submission_lean` selects the lean
+variant. `--backend mock` runs the plumbing with no model.
+
+## 6. Building the archive
+
+Ship the directory that won. For the pipeline:
+
+```bash
 cd sample_submission && zip -r -X ../submission.zip . -x '*.DS_Store' '*/__pycache__/*' && cd ..
-unzip -q submission.zip -d /tmp/zcheck && \
-  $PY scripts/submission_harness.py --submission-dir /tmp/zcheck --dry-run --task-id <id>
 ```
 
-The last line matters: it validates what the scorer will actually unpack, not the working tree.
-Full checklist in `sample_submission/AGENT_CLAUDE.md` §6.
+For the lean variant, replace `sample_submission` with `sample_submission_lean`. Then validate what
+the scorer will unpack, not the working tree:
+
+```bash
+rm -rf /tmp/zcheck && unzip -q submission.zip -d /tmp/zcheck && $PY scripts/validate_submission.py /tmp/zcheck
+```
+
+```bash
+$PY scripts/submission_harness.py --submission-dir /tmp/zcheck --dry-run --task-id fastapi_15589
+```
+
+Record the run and the score in `docs/AGENT_CLAUDE.md` §7 and `docs/IMPROVEMENT_PLAN.md` §9.

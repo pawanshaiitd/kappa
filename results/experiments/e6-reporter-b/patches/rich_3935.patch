@@ -1,0 +1,23 @@
+diff --git a/rich/padding.py b/rich/padding.py
+index d1aa01be..5184b5e4 100644
+--- a/rich/padding.py
++++ b/rich/padding.py
+@@ -81,7 +81,8 @@ class Padding(JupyterMixin):
+     ) -> "RenderResult":
+         style = console.get_style(self.style)
+         if self.expand:
+-            width = options.max_width
++            max_w = Measurement.get(console, options, self.renderable).maximum
++            width = max(options.max_width, max_w)
+         else:
+             width = min(
+                 Measurement.get(console, options, self.renderable).maximum
+@@ -89,7 +90,7 @@ class Padding(JupyterMixin):
+                 + self.right,
+                 options.max_width,
+             )
+-        render_options = options.update_width(width - self.left - self.right)
++        render_options = options.update_width(max(0, width - self.left - self.right))
+         if render_options.height is not None:
+             render_options = render_options.update_height(
+                 height=render_options.height - self.top - self.bottom

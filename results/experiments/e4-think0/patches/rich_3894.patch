@@ -1,0 +1,22 @@
+diff --git a/rich/_inspect.py b/rich/_inspect.py
+index 27d65cec..db2b1ef5 100644
+--- a/rich/_inspect.py
++++ b/rich/_inspect.py
+@@ -100,7 +100,16 @@ class Inspect(JupyterMixin):
+             callable_name.stylize(f"link file://{source_filename}")
+         signature_text = self.highlighter(_signature)
+ 
+-        qualname = name or getattr(obj, "__qualname__", name)
++        qualname = name
++        q = getattr(obj, "__qualname__", None)
++        if isinstance(q, str):
++            qualname = q
++        else:
++            n = getattr(obj, "__name__", None)
++            if isinstance(n, str):
++                qualname = n
++            else:
++                qualname = name
+ 
+         # If obj is a module, there may be classes (which are callable) to display
+         if inspect.isclass(obj):

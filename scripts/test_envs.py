@@ -291,6 +291,32 @@ def _interpreter() -> str:
     return sys.executable
 
 
+def _repair_shebangs(env_dir: Path) -> None:
+    """Point console scripts at this venv's own interpreter.
+
+    pip writes an absolute shebang into every script in bin/. If the cache directory was moved or
+    copied (for example after renaming the repository), `bin/pytest` points at an interpreter that
+    no longer exists and every verification fails with "bad interpreter".
+    """
+    bin_dir = env_dir / "bin"
+    want = f"#!{bin_dir / 'python'}"
+    for script in bin_dir.iterdir() if bin_dir.is_dir() else []:
+        if script.is_symlink() or not script.is_file():
+            continue
+        try:
+            with script.open("rb") as fh:
+                first = fh.readline()
+        except OSError:
+            continue
+        if not first.startswith(b"#!") or b"python" not in first:
+            continue
+        current = first[2:].strip().split()[0].decode("utf-8", "replace")
+        if current == str(bin_dir / "python") or Path(current).exists():
+            continue
+        body = script.read_bytes()[len(first):]
+        script.write_bytes(want.encode() + b"\n" + body)
+
+
 def ensure_env(
     requirements: List[str],
     cache_root: Path = CACHE_ROOT,
@@ -309,6 +335,7 @@ def ensure_env(
     pytest_bin = env_dir / "bin" / "pytest"
 
     if marker.is_file() and pytest_bin.is_file():
+        _repair_shebangs(env_dir)
         try:
             state = json.loads(marker.read_text(encoding="utf-8"))
         except json.JSONDecodeError:

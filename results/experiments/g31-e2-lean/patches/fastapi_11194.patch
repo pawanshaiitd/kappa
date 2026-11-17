@@ -1,0 +1,32 @@
+diff --git a/reproduce_bug.py b/reproduce_bug.py
+new file mode 100644
+index 00000000..e3443f61
+--- /dev/null
++++ b/reproduce_bug.py
+@@ -0,0 +1,26 @@
++from fastapi import FastAPI, File, Form, UploadFile
++from fastapi.testclient import TestClient
++
++app = FastAPI()
++
++@app.post("/upload")
++async def upload(form_val: str = Form(...), file_val: UploadFile = File(...)):
++    return {"form_val": form_val, "file_val": file_val.filename}
++
++client = TestClient(app)
++
++def test_form_then_file():
++    files = {"file_val": ("test.txt", b"hello world")}
++    data = {"form_val": "test value"}
++    response = client.post("/upload", data=data, files=files)
++    print(f"Status: {response.status_code}")
++    if response.status_code != 200:
++        print(f"Body: {response.text}")
++    assert response.status_code == 200
++
++if __name__ == "__main__":
++    try:
++        test_form_then_file()
++        print("Test passed!")
++    except Exception as e:
++        print(f"Test failed: {e}")

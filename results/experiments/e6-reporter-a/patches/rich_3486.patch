@@ -1,0 +1,12 @@
+diff --git a/rich/traceback.py b/rich/traceback.py
+index fcefeb23..308fd98f 100644
+--- a/rich/traceback.py
++++ b/rich/traceback.py
+@@ -451,6 +451,7 @@ class Traceback:
+                 frame = Frame(
+                     filename=filename or "?",
+                     lineno=line_no,
++                    line=frame_summary.line,
+                     name=frame_summary.f_code.co_name,
+                     locals={
+                         key: pretty.traverse(

@@ -1,0 +1,13 @@
+diff --git a/rich/text.py b/rich/text.py
+index 7e087a4e..50aa26b4 100644
+--- a/rich/text.py
++++ b/rich/text.py
+@@ -661,7 +661,7 @@ class Text(JupyterMixin):
+ 
+     def rstrip(self) -> None:
+         """Strip whitespace from end of text."""
+-        self.plain = self.plain.rstrip()
++        self.plain = self.plain.rstrip(" \t")
+ 
+     def rstrip_end(self, size: int) -> None:
+         """Remove whitespace beyond a certain width at the end of the text.

@@ -1,0 +1,78 @@
+{
+  "name": "smoke-pipeline",
+  "variant": [
+    "baseline"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 67.6,
+    "task_seconds_p90": 110.7,
+    "task_seconds_max": 110.7,
+    "notebook_hours": {
+      "129": 4.8,
+      "200": 7.3,
+      "300": 10.9
+    }
+  },
+  "phase_medians": {
+    "locator": {
+      "llm_calls": 17.5,
+      "tool_calls": 17.0,
+      "prompt_tokens": 96651.5,
+      "output_tokens": 2788.0
+    },
+    "fixer": {
+      "llm_calls": 4.5,
+      "tool_calls": 3.5,
+      "prompt_tokens": 16952.0,
+      "output_tokens": 1521.5
+    },
+    "verifier": {
+      "llm_calls": 8.0,
+      "tool_calls": 7.5,
+      "prompt_tokens": 30152.5,
+      "output_tokens": 1483.5
+    }
+  },
+  "median_prompt_tokens_max": 7842.0,
+  "max_prompt_tokens": 13215,
+  "median_output_tokens": 4445.0,
+  "compactions": 0,
+  "agent_envs": {
+    "4352d33e65d29c27": 1,
+    "01e9b61bd411ac3d": 1,
+    "a90fce46fa6a543f": 1,
+    "cd8edd2480d890f5": 1
+  },
+  "tasks": 4,
+  "resolved": 1,
+  "resolution_rate": 0.25,
+  "failure_buckets": {
+    "resolved": 1,
+    "no_edit_attempted": 3
+  },
+  "median_turns": 23.0,
+  "median_tool_calls": 22.0,
+  "median_seconds": 69.8,
+  "median_first_edit_turn": 6,
+  "submitted_explicitly": 0,
+  "empty_patches": 3,
+  "tool_errors": {
+    "run_command:CommandError": 2
+  },
+  "failing_commands": {
+    "grep -n": 2
+  },
+  "test_envs": {
+    "4352d33e65d29c27": 1,
+    "unknown": 3
+  },
+  "end_reasons": {
+    "tool-call_budget_exhausted": 4
+  },
+  "sim": null,
+  "eval_set": "explicit-ids",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

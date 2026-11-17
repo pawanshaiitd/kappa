@@ -1,0 +1,105 @@
+{
+  "name": "e4-think1024",
+  "variant": [
+    "thinking_budget=1024"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 159.0,
+    "task_seconds_p90": 196.9,
+    "task_seconds_max": 216.9,
+    "notebook_hours": {
+      "129": 8.1,
+      "200": 12.4,
+      "300": 18.5
+    }
+  },
+  "phase_medians": {
+    "locator": {
+      "llm_calls": 13.0,
+      "tool_calls": 12.0,
+      "prompt_tokens": 71209.5,
+      "output_tokens": 4928.5
+    },
+    "fixer": {
+      "llm_calls": 6.0,
+      "tool_calls": 5.5,
+      "prompt_tokens": 23937.5,
+      "output_tokens": 2176.0
+    },
+    "verifier": {
+      "llm_calls": 7,
+      "tool_calls": 7,
+      "prompt_tokens": 20260,
+      "output_tokens": 1518
+    }
+  },
+  "median_prompt_tokens_max": 9873.5,
+  "max_prompt_tokens": 16973,
+  "median_output_tokens": 8028.5,
+  "compactions": 1,
+  "agent_envs": {
+    "fda4695ce7e4da7c": 1,
+    "cd8edd2480d890f5": 9,
+    "35422b7e951e0004": 1,
+    "816089f2a1d5780e": 1,
+    "01e9b61bd411ac3d": 2,
+    "82257c00fb99919f": 1,
+    "7c44ce1aa7eb82cb": 1,
+    "4352d33e65d29c27": 2,
+    "3bd2b5b0cae32f07": 1,
+    "d701d52285d2e297": 6,
+    "a90fce46fa6a543f": 5
+  },
+  "tasks": 30,
+  "resolved": 8,
+  "resolution_rate": 0.2667,
+  "failure_buckets": {
+    "no_edit_attempted": 16,
+    "resolved": 8,
+    "tests_failed": 6
+  },
+  "median_turns": 23.0,
+  "median_tool_calls": 21.5,
+  "median_seconds": 173.2,
+  "median_first_edit_turn": 15.0,
+  "submitted_explicitly": 4,
+  "empty_patches": 16,
+  "tool_errors": {
+    "run_command:CommandError": 36,
+    "edit_file:FileEditError": 7,
+    "write_file:IsADirectoryError": 1
+  },
+  "failing_commands": {
+    "grep -n": 14,
+    "python3 -c": 3,
+    "grep -nE": 2,
+    "read_file fastapi/dependencies/utils.py": 2,
+    "grep -rnE": 2,
+    "sed -i": 2,
+    "grep -ni": 1,
+    "cat <<EOF": 1,
+    "read_file fastapi/params.py": 1,
+    "grep \"frozen=True\"": 1,
+    "read_file fastapi/applications.py": 1,
+    "grep \"import": 1
+  },
+  "test_envs": {
+    "unknown": 16,
+    "cd8edd2480d890f5": 4,
+    "82257c00fb99919f": 1,
+    "4352d33e65d29c27": 2,
+    "d701d52285d2e297": 4,
+    "a90fce46fa6a543f": 3
+  },
+  "end_reasons": {
+    "time_budget_exhausted": 11,
+    "tool-call_budget_exhausted": 15,
+    "submit_patch": 4
+  },
+  "sim": null,
+  "eval_set": "experiments/eval_sets/set30_a.json",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

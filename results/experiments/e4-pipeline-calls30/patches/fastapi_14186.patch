@@ -1,0 +1,15 @@
+diff --git a/fix_dummy.py b/fix_dummy.py
+new file mode 100644
+index 00000000..95122d28
+--- /dev/null
++++ b/fix_dummy.py
+@@ -0,0 +1,9 @@
++import sys
++from pydantic.version import VERSION as PYDANTIC_VERSION
++PYDANTIC_VERSION_MINOR_TUPLE = tuple(int(x) for x in PYDANTIC_VERSION.split(".")[:2])
++PYDANTIC_V2 = PYDANTIC_VERSION_MINOR_TUPLE[0] == 2
++IS_PYTHON_314 = sys.version_info.major == 3 and sys.version_info.minor == 14
++IS_PYDANTIC_212 = PYDANTIC_V2 and PYDANTIC_VERSION_MINOR_TUPLE[1] >= 12
++
++if IS_PYTHON_314 and IS_PYDANTIC_212:
++    print("Python 3.14 and Pydantic 2.12+ detected. Using dummy pydantic.v1.")

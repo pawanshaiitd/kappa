@@ -18,6 +18,10 @@ import yaml
 from pathlib import Path
 from typing import Set, Dict, Any, List
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 ALLOWED_MODEL_NAMES = {
     "gemma-4-31b-it-qat-w4a16-ct",
     "gemma-4-12b-it-qat-w4a16-ct",
@@ -35,6 +39,70 @@ ALLOWED_EXTENSIONS = {
 }
 
 MAX_TOTAL_SIZE_BYTES = 3 * 1024 * 1024 * 1024  # 3 GiB
+
+# Time safety. Tasks run one after another, so the per-task cap decides whether the run finishes.
+# Worst case, every task runs to the cap:
+#   startup + PLAN_TASKS * (max_time_minutes + overshoot + SETUP_MINUTES)  <=  RUN_LIMIT_MINUTES
+# overshoot: the cap is checked only between tool calls, so the last reply can run over by up to
+# max_output_tokens / PLAN_DECODE_TPS seconds.
+# Numbers (2026-11-17): the hidden set is about 124 tasks. Accepted submissions ran up to 24 h
+# including queueing; submission #2 was killed at 18 h of runtime. The guard requires the worst
+# case to fit in 24 h and reports where it stands against 18 h. PLAN_DECODE_TPS is the
+# single-stream decode speed measured on the 31B vLLM endpoint (10.6 tok/s).
+RUN_LIMIT_MINUTES = 24 * 60
+OBSERVED_KILL_MINUTES = 18 * 60
+PLAN_TASKS = 130
+SETUP_MINUTES = 1.0
+STARTUP_MINUTES = 35.0
+PLAN_DECODE_TPS = 10.6
+MAX_SAFE_OUTPUT_TOKENS = 2048
+
+
+def max_output_tokens_of(sub_path: Path) -> int:
+    """Largest max_output_tokens declared anywhere in the submission (ADK default 16384)."""
+    found = [int(m.group(1)) for y in sub_path.rglob("*.yaml")
+             for m in re.finditer(r"(?m)^\s*max_output_tokens:\s*(\d+)", y.read_text(encoding="utf-8"))]
+    return max(found) if found else 16384
+
+
+def worst_case_hours(sub_path: Path, minutes: float) -> float:
+    """Run length if every one of PLAN_TASKS tasks runs to the time cap."""
+    overshoot = max_output_tokens_of(sub_path) / PLAN_DECODE_TPS / 60
+    return (STARTUP_MINUTES + PLAN_TASKS * (minutes + overshoot + SETUP_MINUTES)) / 60
+
+
+def time_safety_problems(sub_path: Path) -> List[str]:
+    """Reasons this submission could run past the notebook limit or fail to start."""
+    problems: List[str] = []
+    budget = {"max_time_minutes": 60.0}
+    ec = sub_path / "eval_config.yaml"
+    if ec.exists():
+        data = yaml.safe_load(ec.read_text(encoding="utf-8")) or {}
+        budget.update(data.get("evaluation") or {})
+    else:
+        problems.append("no eval_config.yaml: the default is 60 minutes per task")
+    minutes = float(budget["max_time_minutes"])
+    hours = worst_case_hours(sub_path, minutes)
+    if hours * 60 > RUN_LIMIT_MINUTES:
+        problems.append(
+            f"max_time_minutes={minutes:g}: if all {PLAN_TASKS} tasks reach the cap the run takes "
+            f"{hours:.1f} h (cap + last-reply overshoot + {SETUP_MINUTES:g} min setup per task, "
+            f"{STARTUP_MINUTES:g} min start-up), over the {RUN_LIMIT_MINUTES // 60} h limit."
+        )
+    for y in sorted(sub_path.rglob("*.yaml")):
+        txt = y.read_text(encoding="utf-8")
+        for m in re.finditer(r"(?m)^\s*max_output_tokens:\s*(\d+)", txt):
+            if int(m.group(1)) > MAX_SAFE_OUTPUT_TOKENS:
+                problems.append(
+                    f"{y.relative_to(sub_path)}: max_output_tokens={m.group(1)} lets one "
+                    f"generation overrun the time cap by minutes; keep it <= {MAX_SAFE_OUTPUT_TOKENS}"
+                )
+        if re.search(r"(?m)^\s*thinking_level:", txt):
+            problems.append(f"{y.relative_to(sub_path)}: thinking_level is dropped by vLLM")
+    adapters = sub_path / "adapters"
+    if adapters.is_dir() and any(d.is_dir() for d in adapters.iterdir()):
+        problems.append("adapters/ present: this switches LoRA on in vLLM; ship only a tested adapter")
+    return problems
 
 
 def normalize_model_name(name: str) -> str:
@@ -145,6 +213,11 @@ def validate_submission_dir(submission_dir: str | Path) -> Dict[str, Any]:
     except Exception as e:
         return {"valid": False, "error": f"Failed to parse agent configs: {e}"}
 
+    # The scorer also reads agent YAMLs that nothing references.
+    for y in sorted(sub_path.rglob("*.yaml")) + sorted(sub_path.rglob("*.yml")):
+        for m in re.finditer(r"(?m)^model:\s*['\"]?([^\s'\"#]+)", y.read_text(encoding="utf-8")):
+            models_found.add(normalize_model_name(m.group(1)))
+
     if len(models_found) == 0:
         return {"valid": False, "error": "No model declared in submission."}
     if len(models_found) > 1:
@@ -157,6 +230,20 @@ def validate_submission_dir(submission_dir: str | Path) -> Dict[str, Any]:
             "error": f"Model '{declared_model}' is not in ALLOWED_MODEL_NAMES: {ALLOWED_MODEL_NAMES}",
         }
 
+    unsafe = time_safety_problems(sub_path)
+    if unsafe:
+        return {"valid": False, "error": "Time/startup safety: " + " | ".join(unsafe)}
+
+    # Structure, tools and session-state keys, checked by the same compiler the local harness uses.
+    try:
+        from scripts.submission_harness import Submission
+
+        compile_problems = Submission(sub_path).validate()
+    except Exception as e:  # noqa: BLE001
+        compile_problems = [f"does not compile: {e}"]
+    if compile_problems:
+        return {"valid": False, "error": "Compile: " + " | ".join(compile_problems)}
+
     return {
         "valid": True,
         "submission_dir": str(sub_path),
@@ -167,7 +254,8 @@ def validate_submission_dir(submission_dir: str | Path) -> Dict[str, Any]:
 
 
 def main():
-    targets = ["sample_submission", "sample_submission_4b"]
+    targets = sys.argv[1:] or ["sample_submission", "sample_submission_lean"]
+    failed = False
     for target in targets:
         print(f"--- Validating {target} ---")
         res = validate_submission_dir(target)
@@ -175,8 +263,18 @@ def main():
             print(f"  [PASS] Valid submission!")
             print(f"  Declared Model: {res['declared_model']}")
             print(f"  Unpacked Size:  {res['total_size_mb']} MB")
+            ec = Path(target) / "eval_config.yaml"
+            ev = ((yaml.safe_load(ec.read_text(encoding="utf-8")) or {}).get("evaluation") or {}) if ec.exists() else {}
+            minutes = float(ev.get("max_time_minutes", 60.0))
+            hours = worst_case_hours(Path(target), minutes)
+            flag = "within" if hours * 60 <= OBSERVED_KILL_MINUTES else "OVER"
+            print(f"  Worst case:     {hours:.1f} h if all {PLAN_TASKS} tasks hit the {minutes:g}-min cap "
+                  f"({flag} the 18 h runtime at which submission #2 was killed; limit "
+                  f"{RUN_LIMIT_MINUTES // 60} h)")
         else:
+            failed = True
             print(f"  [FAIL] {res['error']}")
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":

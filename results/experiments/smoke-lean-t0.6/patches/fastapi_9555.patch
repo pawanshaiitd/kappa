@@ -1,0 +1,21 @@
+diff --git a/fastapi/dependencies/models.py b/fastapi/dependencies/models.py
+index fbb666a7..ce9e3dd7 100644
+--- a/fastapi/dependencies/models.py
++++ b/fastapi/dependencies/models.py
+@@ -91,11 +91,12 @@ class Dependant:
+ 
+     @cached_property
+     def is_coroutine_callable(self) -> bool:
+-        if inspect.isroutine(self.call):
+-            return iscoroutinefunction(self.call)
+-        if inspect.isclass(self.call):
++        call = inspect.unwrap(self.call)
++        if inspect.isroutine(call):
++            return iscoroutinefunction(call)
++        if inspect.isclass(call):
+             return False
+-        dunder_call = getattr(self.call, "__call__", None)  # noqa: B004
++        dunder_call = getattr(call, "__call__", None)  # noqa: B004
+         return iscoroutinefunction(dunder_call)
+ 
+     @cached_property

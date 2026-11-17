@@ -1,0 +1,259 @@
+[1mexperiment:[0m e5-confirm   [1mvariant:[0m baseline
+[1mmodel:[0m google/gemma-4-12B-it-qat-w4a16-ct via openai   [1mtasks:[0m 30 of 30   [1mclock:[0m wall
+[1mendpoint:[0m http://10.120.0.183:8000/v1
+
+[93mtool-call budget exhausted - ending session.[0m
+[1/30] fastapi_13207  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 143.7s peak_prompt=11428 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[2/30] fastapi_12942  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 170.4s peak_prompt=11420 end=tool-call_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[3/30] fastapi_11355  -> [91mno_edit_attempted[0m  turns=14 calls=12 patch=0B 186.6s peak_prompt=5985 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[4/30] fastapi_13537  -> [91mno_edit_attempted[0m  turns=19 calls=17 patch=0B 185.5s peak_prompt=7051 end=time_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[5/30] fastapi_14077  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 159.5s peak_prompt=6123 end=tool-call_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[6/30] fastapi_14099  -> [91mno_edit_attempted[0m  turns=18 calls=16 patch=0B 206.2s peak_prompt=10481 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[7/30] fastapi_14297  -> [91mno_edit_attempted[0m  turns=21 calls=19 patch=0B 181.5s peak_prompt=12899 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[8/30] fastapi_14361  -> [91mno_edit_attempted[0m  turns=19 calls=16 patch=0B 181.6s peak_prompt=10209 end=time_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[9/30] fastapi_14371  -> [91mno_edit_attempted[0m  turns=24 calls=22 patch=0B 131.0s peak_prompt=11058 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 1050 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_security_oauth2_authorization_code_bearer_scopes_openapi.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+...FE                                                                    [100%]
+
+═══════════════════════════════ inline-snapshot ════════════════════════════════
+──────────────────────────────── Fix snapshots ─────────────────────────────────
+╭─── tests/test_security_oauth2_authorization_code_bearer_scopes_openapi.py ───╮
+│ @@ -91,9 +91,7 @@                                                            │
+│                                                                              │
+│                                  "content": {"application/json": {"schema":  │
+│ {}}},                                                                        │
+│                              }                                               │
+│                          },                                                  │
+│ -                        "security": [                                       │
+│ -                            {"OAuth2AuthorizationCodeBearer": ["read"]},    │
+│ -                        ],                                                  │
+│ +                        "security": [{'OAuth2AuthorizationCodeBearer': []}, │
+│ {"OAuth2AuthorizationCodeBearer": ["read"]}],                                │
+│                      },                                                      │
+│                      "post": {                                               │
+│                          "summary": "Create Item",                           │
+│ @@ -104,9 +102,7 @@                     
+[Verification Result] Resolved: False (Exit Code: 1)
+[10/30] fastapi_14455  -> [91mtests_failed[0m  turns=24 calls=22 patch=1050B 177.8s peak_prompt=9634 end=tool-call_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[11/30] fastapi_14419  -> [91mno_edit_attempted[0m  turns=17 calls=15 patch=0B 193.7s peak_prompt=9904 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 1199 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/cd8edd2480d890f5/bin/pytest tests/test_security_oauth2_authorization_code_bearer_scopes_openapi.py -q -W default  [env cd8edd2480d890f5]
+[Verification Test Output]:
+.....FE                                                                  [100%]
+
+═══════════════════════════════ inline-snapshot ════════════════════════════════
+──────────────────────────────── Fix snapshots ─────────────────────────────────
+╭─── tests/test_security_oauth2_authorization_code_bearer_scopes_openapi.py ───╮
+│ @@ -114,9 +114,7 @@                                                          │
+│                                                                              │
+│                                  "description": "Successful Response",       │
+│                                  "content": {"application/json": {"schema":  │
+│ {}}},                                                                        │
+│                              }                                               │
+│ -                        },                                                  │
+│ -                        "security": [{"OAuth2AuthorizationCodeBearer":      │
+│ []}],                                                                        │
+│ -                    }                                                       │
+│ +                        }}                                                  │
+│                  },                                                          │
+│                  "/with-oauth2-scheme": {                                    │
+│                      "get": {                                                │
+│ @@ -142,11 +140,7 @@                    
+[Verification Result] Resolved: False (Exit Code: 1)
+[12/30] fastapi_14459  -> [91mtests_failed[0m  turns=21 calls=18 patch=1199B 188.8s peak_prompt=8950 end=time_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[13/30] fastapi_14479  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 115.3s peak_prompt=7669 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[14/30] fastapi_14485  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 169.2s peak_prompt=5930 end=tool-call_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[15/30] fastapi_14482  -> [91mno_edit_attempted[0m  turns=21 calls=19 patch=0B 184.8s peak_prompt=13451 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[16/30] fastapi_14512  -> [91mno_edit_attempted[0m  turns=18 calls=15 patch=0B 225.8s peak_prompt=10376 end=time_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[17/30] requests_6644  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 167.8s peak_prompt=5554 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 139 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_utils.py -q -W default  [env 4352d33e65d29c27]
+[Verification Test Output]:
+..s................F.................................................... [ 32%]
+........................................................................ [ 65%]
+..........................................................sssssssssss... [ 98%]
+..s                                                                      [100%]
+=================================== FAILURES ===================================
+___________ TestGetNetrcAuth.test_empty_default_credentials_ignored ____________
+
+self = <tests.test_utils.TestGetNetrcAuth object at 0x10bdf4a10>
+tmp_path = PosixPath('/private/var/folders/rb/dgz19wp90xz5c80l50tldysr0000gr/T/pytest-of-pawankumar.s/pytest-43/test_empty_default_credentials0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10be46630>
+
+    def test_empty_default_credentials_ignored(self, tmp_path, monkeypatch):
+        """Empty default credentials should not be returned."""
+        netrc_path = tmp_path / ".netrc"
+        monkeypatch.setenv("NETRC", str(netrc_path))
+        with open(netrc_path, "w") as f:
+            f.write("machine example.com login user password pass\ndefault\n")
+    
+        auth = get_netrc_auth("http://httpbin.org/")
+>       assert auth is None
+E       AssertionError: assert ('', '') is None
+
+tests/test_utils.py:181: AssertionError
+=============================== warnings summary ===============================
+tests/test_utils.py::TestContentEncodingDetection::test_none
+tests/test_utils.py::TestContentEncodingDetection::test_pragmas
+[2026-11-17 13:53:52,273] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: False (Exit Code: 1)
+[18/30] requests_7205  -> [91mtests_failed[0m  turns=23 calls=22 patch=139B 170.5s peak_prompt=8738 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[19/30] rich_3454  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 118.6s peak_prompt=9447 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 558 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/d701d52285d2e297/bin/pytest tests/test_repr.py -q -W default  [env d701d52285d2e297]
+[Verification Test Output]:
+........                                                                 [100%]
+8 passed in 0.07s
+
+[Verification Result] Resolved: True (Exit Code: 0)
+[20/30] rich_3006  -> [92mRESOLVED[0m  turns=24 calls=22 patch=558B 138.7s peak_prompt=7488 end=tool-call_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[93mNo submit_patch; recovered 500 B from the working tree.[0m
+
+======================================================================
+  PHASE 2: VERIFICATION SANDBOX (CONTAINER B)
+======================================================================
+[Verification] Agent patch applied cleanly via: git apply --unsafe-paths
+[Verification] Running test command: /Users/pawankumar.s/Documents/kappa/.venv_cache/4352d33e65d29c27/bin/pytest tests/test_requests.py -q -W default  [env 4352d33e65d29c27]
+[Verification Test Output]:
+.................................F..FF.................................. [ 21%]
+.................................................spytest-httpbin server hit an exception serving request: [SSL: TLSV1_ALERT_UNKNOWN_CA] tlsv1 alert unknown ca (_ssl.c:1010)
+attempting to ignore so the rest of the tests can run
+...................... [ 42%]
+........................................................................ [ 63%]
+.......................x................................................ [ 85%]
+..................................................                       [100%]
+=================================== FAILURES ===================================
+_____________ TestRequests.test_redirect_history_no_self_reference _____________
+
+self = <tests.test_requests.TestRequests object at 0x1080f79b0>
+httpbin = <function prepare_url.<locals>.inner at 0x109070220>
+
+    def test_redirect_history_no_self_reference(self, httpbin):
+        r = requests.get(httpbin("redirect", "3"))
+        assert r.status_code == 200
+        assert len(r.history) == 3
+        for i, resp in enumerate(r.history):
+            assert resp not in resp.history
+>           assert resp.history == r.history[:i]
+E           assert [] == [<Response [302]>]
+E             
+E             Right contains one more item: <Response [302]>
+E             Use -v to get more diff
+
+tests/test_requests.py:226: AssertionError
+----------------------------- Captured stderr call -----------------------------
+127.0.0.1 - - [17/Nov/202
+[2026-11-17 13:56:30,104] WARNING in core: flasgger is not installed; serving the static landing page at / and skipping the Swagger UI and /spec.json.
+
+[Verification Result] Resolved: False (Exit Code: 1)
+[21/30] requests_7328  -> [91mtests_failed[0m  turns=21 calls=19 patch=500B 183.2s peak_prompt=7260 end=time_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[22/30] rich_3518  -> [91mno_edit_attempted[0m  turns=22 calls=22 patch=0B 133.5s peak_prompt=13579 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[23/30] rich_3470  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 173.6s peak_prompt=9554 end=tool-call_budget_exhausted
+
+[93m[nudge 1/3][0m Please continue your work using the available tools, or call submit_patch when you have co...
+
+[93mtime budget exhausted - ending session.[0m
+[24/30] rich_3718  -> [91mno_edit_attempted[0m  turns=21 calls=17 patch=0B 184.2s peak_prompt=14537 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[25/30] rich_3882  -> [91mno_edit_attempted[0m  turns=21 calls=20 patch=0B 181.3s peak_prompt=13717 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[26/30] rich_3905  -> [91mno_edit_attempted[0m  turns=24 calls=21 patch=0B 194.2s peak_prompt=8171 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[27/30] rich_3934  -> [91mno_edit_attempted[0m  turns=22 calls=20 patch=0B 183.8s peak_prompt=9170 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[28/30] rich_3935  -> [91mno_edit_attempted[0m  turns=17 calls=15 patch=0B 181.3s peak_prompt=8784 end=time_budget_exhausted
+
+[93mtime budget exhausted - ending session.[0m
+[29/30] rich_3944  -> [91mno_edit_attempted[0m  turns=18 calls=15 patch=0B 181.4s peak_prompt=10630 end=time_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[30/30] rich_3953  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 104.7s peak_prompt=20224 end=tool-call_budget_exhausted
+
+========================================================================
+[1m  e5-confirm[0m   variant: baseline
+========================================================================
+  resolution rate : [92m0.033[0m  (1/30)
+  failure buckets : {'no_edit_attempted': 25, 'tests_failed': 4, 'resolved': 1}
+  end reasons     : {'time_budget_exhausted': 16, 'tool-call_budget_exhausted': 14}
+  medians         : turns=22.0 calls=20.5 secs=181.3 first_edit_turn=17.5
+  empty patches   : 25   explicit submits: 0
+  tool errors     : {'run_command:CommandError': 37, 'edit_file:FileEditError': 8, 'read_file:FileNotFoundError': 1}
+  failing commands: {'grep -n': 8, 'sed -i': 8, 'python3 -c': 6, 'read_file fastapi/params.py': 4, 'grep -r': 3, 'echo "machine:host:password"': 3, 'read_file src/requests/sessions.py': 2, 'grep -rn': 1, 'read_file fastapi/routing.py': 1, 'cat <<EOF': 1}
+  context         : median peak prompt=9594.0 tok  max=20224 tok  compactions=2
+  phase locator     : llm_calls=15.5  tool_calls=14.5  prompt_tokens=75103  output_tokens=4015.5
+  phase fixer       : llm_calls=5.5  tool_calls=4.5  prompt_tokens=19427  output_tokens=2171.5
+  phase verifier    : llm_calls=4  tool_calls=3  prompt_tokens=10333  output_tokens=1194
+  time per task   : mean=169.9s p90=193.7s max=225.8s  (API wall clock - NOT a Gemma estimate)
+
+Artifacts: /Users/pawankumar.s/Documents/kappa/results/experiments/e5-confirm

@@ -1,0 +1,10 @@
+name: locator
+description: Read-only step. Finds the code that must change and reports its file, lines, cause and nearest test.
+model: gemma-4-31b-it-qat-w4a16-ct
+instruction: !include prompts/locator.md
+tools:
+  - run_command
+  - read_file
+  - get_code_neighbors
+  - search_similar_code
+generate_content_config: !include configs/sampling.yaml

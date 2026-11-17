@@ -1,0 +1,111 @@
+{
+  "name": "g31-e2-pipeline",
+  "variant": [
+    "declare_model=gemma-4-31b-it-qat-w4a16-ct",
+    "max_time_minutes=30.0"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 995.3,
+    "task_seconds_p90": 1487.4,
+    "task_seconds_max": 1722.0,
+    "notebook_hours": {
+      "129": 38.1,
+      "200": 58.9,
+      "300": 88.2
+    }
+  },
+  "phase_medians": {
+    "locator": {
+      "llm_calls": 13.5,
+      "tool_calls": 12.5,
+      "prompt_tokens": 75745.0,
+      "output_tokens": 4999.0
+    },
+    "fixer": {
+      "llm_calls": 6.0,
+      "tool_calls": 5.0,
+      "prompt_tokens": 16810.0,
+      "output_tokens": 1760.0
+    },
+    "verifier": {
+      "llm_calls": 6.0,
+      "tool_calls": 6.0,
+      "prompt_tokens": 12455.0,
+      "output_tokens": 451.0
+    }
+  },
+  "median_prompt_tokens_max": 7688.0,
+  "max_prompt_tokens": 19022,
+  "median_output_tokens": 7676.5,
+  "compactions": 0,
+  "agent_envs": {
+    "fda4695ce7e4da7c": 1,
+    "cd8edd2480d890f5": 9,
+    "35422b7e951e0004": 1,
+    "816089f2a1d5780e": 1,
+    "01e9b61bd411ac3d": 2,
+    "82257c00fb99919f": 1,
+    "7c44ce1aa7eb82cb": 1,
+    "4352d33e65d29c27": 2,
+    "3bd2b5b0cae32f07": 1,
+    "d701d52285d2e297": 6,
+    "a90fce46fa6a543f": 5
+  },
+  "tasks": 30,
+  "resolved": 13,
+  "resolution_rate": 0.4333,
+  "failure_buckets": {
+    "resolved": 13,
+    "no_edit_attempted": 7,
+    "tests_failed": 8,
+    "patch_breaks_import": 2
+  },
+  "median_turns": 23.0,
+  "median_tool_calls": 22.0,
+  "median_seconds": 961.0,
+  "median_first_edit_turn": 15.0,
+  "submitted_explicitly": 9,
+  "empty_patches": 7,
+  "tool_errors": {
+    "run_command:CommandError": 41,
+    "get_code_neighbors:NotIndexed": 3,
+    "edit_file:FileEditError": 1
+  },
+  "failing_commands": {
+    "python3 -c": 15,
+    "grep -n": 8,
+    "grep -rn": 4,
+    "grep -nE": 3,
+    "cat <<EOF": 3,
+    "pytest -k": 2,
+    "pytest tests/test_dependencies_utils.py": 1,
+    "sed -i": 1,
+    "grep \"import": 1,
+    "python3 -m": 1,
+    "grep -i": 1,
+    "pytest": 1
+  },
+  "test_envs": {
+    "fda4695ce7e4da7c": 1,
+    "unknown": 7,
+    "35422b7e951e0004": 1,
+    "01e9b61bd411ac3d": 1,
+    "cd8edd2480d890f5": 7,
+    "82257c00fb99919f": 1,
+    "4352d33e65d29c27": 2,
+    "3bd2b5b0cae32f07": 1,
+    "d701d52285d2e297": 5,
+    "a90fce46fa6a543f": 4
+  },
+  "end_reasons": {
+    "tool-call_budget_exhausted": 20,
+    "submit_patch": 9,
+    "max_turns": 1
+  },
+  "sim": null,
+  "eval_set": "experiments/eval_sets/set30_a.json",
+  "model": "google/gemma-4-31B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

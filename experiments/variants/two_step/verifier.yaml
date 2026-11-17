@@ -1,0 +1,11 @@
+name: verifier
+description: Checks that the patch compiles, imports and passes the nearest test, repairs it if needed, and submits.
+model: gemma-4-12b-it-qat-w4a16-ct
+instruction: !include prompts/verifier.md
+include_contents: none
+tools:
+  - run_command
+  - read_file
+  - edit_file
+  - submit_patch
+generate_content_config: !include configs/sampling.yaml

@@ -1,0 +1,72 @@
+{
+  "name": "smoke-lean-t0.6",
+  "variant": [
+    "temperature=0.6"
+  ],
+  "projection": {
+    "simulated_clock": false,
+    "setup_seconds": 60.0,
+    "task_seconds_mean": 75.5,
+    "task_seconds_p90": 99.7,
+    "task_seconds_max": 99.7,
+    "notebook_hours": {
+      "129": 5.1,
+      "200": 7.8,
+      "300": 11.5
+    }
+  },
+  "phase_medians": {
+    "swe_agent": {
+      "llm_calls": 23.0,
+      "tool_calls": 22.0,
+      "prompt_tokens": 143632.5,
+      "output_tokens": 3455.5
+    }
+  },
+  "median_prompt_tokens_max": 10243.0,
+  "max_prompt_tokens": 14326,
+  "median_output_tokens": 3455.5,
+  "compactions": 0,
+  "agent_envs": {
+    "4352d33e65d29c27": 1,
+    "01e9b61bd411ac3d": 1,
+    "a90fce46fa6a543f": 1,
+    "cd8edd2480d890f5": 1
+  },
+  "tasks": 4,
+  "resolved": 1,
+  "resolution_rate": 0.25,
+  "failure_buckets": {
+    "resolved": 1,
+    "no_edit_attempted": 2,
+    "tests_failed": 1
+  },
+  "median_turns": 23.0,
+  "median_tool_calls": 22.0,
+  "median_seconds": 75.2,
+  "median_first_edit_turn": 21.0,
+  "submitted_explicitly": 1,
+  "empty_patches": 2,
+  "tool_errors": {
+    "run_command:CommandError": 5,
+    "edit_file:FileEditError": 1
+  },
+  "failing_commands": {
+    "grep -n": 3,
+    "python3 -m": 1,
+    "grep -nE": 1
+  },
+  "test_envs": {
+    "4352d33e65d29c27": 1,
+    "unknown": 2,
+    "cd8edd2480d890f5": 1
+  },
+  "end_reasons": {
+    "submit_patch": 1,
+    "tool-call_budget_exhausted": 3
+  },
+  "sim": null,
+  "eval_set": "explicit-ids",
+  "model": "google/gemma-4-12B-it-qat-w4a16-ct",
+  "backend": "openai"
+}

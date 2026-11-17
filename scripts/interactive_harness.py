@@ -142,13 +142,13 @@ class InteractiveSession:
             self.emb = CodeEmbeddingIndex(str(emb_path))
 
     def load_system_instruction(self) -> str:
-        prompt_file = REPO_ROOT / "sample_submission" / "prompts" / "system.md"
+        prompt_file = REPO_ROOT / "archive" / "submission_v2" / "prompts" / "system.md"
         if prompt_file.exists():
             return prompt_file.read_text(encoding="utf-8")
         return "You are an autonomous senior software engineer fixing SWE-bench issues."
 
     def get_tool_declarations(self) -> List[Dict[str, Any]]:
-        schemas_file = REPO_ROOT / "sample_submission" / "tools" / "tool_schemas.json"
+        schemas_file = REPO_ROOT / "archive" / "submission_v2" / "tools" / "tool_schemas.json"
         if not schemas_file.exists():
             return []
         raw = json.loads(schemas_file.read_text(encoding="utf-8"))

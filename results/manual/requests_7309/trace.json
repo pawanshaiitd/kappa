@@ -1,0 +1,530 @@
+[
+ {
+  "t": 2.4,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 1997,
+  "output_tokens": 180,
+  "thinking_tokens": 139,
+  "latency": 2.4,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 2.4,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -rnE \"def _parse_content_type_header\" src/requests | head -N 10",
+  "status": "error",
+  "error_type": "CommandError",
+  "result_chars": 216
+ },
+ {
+  "t": 3.6,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 2121,
+  "output_tokens": 99,
+  "thinking_tokens": 58,
+  "latency": 1.2,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 3.6,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -rnE \"def _parse_content_type_header\" src/requests | head -n 10",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 127
+ },
+ {
+  "t": 4.8,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 2220,
+  "output_tokens": 93,
+  "thinking_tokens": 48,
+  "latency": 1.13,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 4.8,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -nE \"^\\s*(class|def|async def) \" src/requests/utils.py | head -n 80",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 1790
+ },
+ {
+  "t": 5.4,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 2991,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.65,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 5.4,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "src/requests/utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 1061
+ },
+ {
+  "t": 11.7,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 3368,
+  "output_tokens": 547,
+  "thinking_tokens": 512,
+  "latency": 6.26,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 11.7,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "ls tests | grep -i content_type | head -n 10",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 60
+ },
+ {
+  "t": 12.2,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 3432,
+  "output_tokens": 31,
+  "thinking_tokens": 0,
+  "latency": 0.49,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 12.2,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -r \"content-type\" tests | head -n 20",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 632
+ },
+ {
+  "t": 12.8,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 3682,
+  "output_tokens": 36,
+  "thinking_tokens": 0,
+  "latency": 0.57,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 12.8,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2949
+ },
+ {
+  "t": 13.6,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 4633,
+  "output_tokens": 41,
+  "thinking_tokens": 0,
+  "latency": 0.76,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 13.6,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"_parse_content_type_header\" tests/test_utils.py | head -n 20",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 217
+ },
+ {
+  "t": 14.1,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 4763,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.58,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 14.2,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2251
+ },
+ {
+  "t": 14.9,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 5534,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.76,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 14.9,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2251
+ },
+ {
+  "t": 15.7,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 6305,
+  "output_tokens": 43,
+  "thinking_tokens": 0,
+  "latency": 0.79,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 15.7,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"test__parse_content_type_header\" tests/test_utils.py | head -n 20",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 119
+ },
+ {
+  "t": 16.3,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 6402,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.6,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 16.3,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2365
+ },
+ {
+  "t": 17.1,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 7209,
+  "output_tokens": 43,
+  "thinking_tokens": 0,
+  "latency": 0.82,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 17.1,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"test__parse_content_type_header\" tests/test_utils.py | head -n 50",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 232
+ },
+ {
+  "t": 17.8,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 7341,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.62,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 17.8,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2364
+ },
+ {
+  "t": 18.6,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 8147,
+  "output_tokens": 44,
+  "thinking_tokens": 0,
+  "latency": 0.85,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 18.6,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"test__parse_content_type_header\" tests/test_utils.py | head -n 100",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 232
+ },
+ {
+  "t": 19.2,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 8280,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.62,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 19.2,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2364
+ },
+ {
+  "t": 20.1,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 9086,
+  "output_tokens": 44,
+  "thinking_tokens": 0,
+  "latency": 0.82,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 20.1,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"test__parse_content_type_header\" tests/test_utils.py | head -n 100",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 232
+ },
+ {
+  "t": 20.7,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 9219,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.64,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 20.7,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2364
+ },
+ {
+  "t": 21.6,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 10025,
+  "output_tokens": 44,
+  "thinking_tokens": 0,
+  "latency": 0.86,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 21.6,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"test__parse_content_type_header\" tests/test_utils.py | head -n 100",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 232
+ },
+ {
+  "t": 22.3,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 10158,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.65,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 22.3,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2364
+ },
+ {
+  "t": 23.1,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 10964,
+  "output_tokens": 44,
+  "thinking_tokens": 0,
+  "latency": 0.85,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "run_command"
+  ]
+ },
+ {
+  "t": 23.1,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "run_command",
+  "arg": "grep -n \"test__parse_content_type_header\" tests/test_utils.py | head -n 100",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 232
+ },
+ {
+  "t": 23.8,
+  "agent": "locator",
+  "kind": "llm",
+  "prompt_tokens": 11097,
+  "output_tokens": 38,
+  "thinking_tokens": 0,
+  "latency": 0.67,
+  "finish_reason": "tool_calls",
+  "text": "",
+  "tool_calls": [
+   "read_file"
+  ]
+ },
+ {
+  "t": 23.8,
+  "agent": "locator",
+  "kind": "tool",
+  "name": "read_file",
+  "arg": "tests/test_utils.py",
+  "status": "ok",
+  "error_type": null,
+  "result_chars": 2364
+ }
+]

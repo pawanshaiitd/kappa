@@ -7,17 +7,19 @@ harness used to compile, run and score it.
 
 | Path | What it is |
 |---|---|
-| `sample_submission/` | **the submission** — `agent.yaml`, prompts, sub-agents, skills, budgets |
+| `sample_submission/` | **the submission** — a `SequentialAgent` pipeline: locator → fixer → verifier, prompts, budgets |
+| `sample_submission_lean/` | fallback variant: one agent, four tools, same budgets |
+| `archive/submission_v2/` | the submission that hit the 18 h timeout, kept as an experiment baseline |
 | `scripts/submission_harness.py` | compiles `agent.yaml` the way the scorer does and runs one task |
 | `scripts/run_experiment.py` | runs a variant over a frozen eval set and reports a comparable score |
 | `scripts/test_envs.py` | resolves each snapshot's own pins into a cached test venv |
 | `scripts/run_gemini_benchmark.py` | Phase 2 verification (`verify_agent_patch`) and snapshot extraction |
 | `experiments/eval_sets/` | frozen task-id lists, so results stay comparable |
 | `experiments/prompt_variants/` | alternative system prompts for A/B experiments |
-| `tests/` | 21 tests, including the ADK skill-name and `!include` traversal guards |
+| `tests/` | compliance, time-safety and runtime tests (pipeline hand-off, sandbox isolation, simulated clock) |
 | `RUNBOOK.md` | **every command, in order** — start here |
-| `sample_submission/AGENT_CLAUDE.md` | what the scorer does, what broke, pre-submit checklist |
-| `sample_submission/IMPROVEMENT_PLAN.md` | the experiment program and its log |
+| `docs/AGENT_CLAUDE.md` | what the scorer does, what broke, pre-submit checklist |
+| `docs/IMPROVEMENT_PLAN.md` | the experiment program and its log |
 | `HARNESS_README.md` | upstream reference for the competition harness |
 
 ## Data not in this repository
@@ -48,7 +50,7 @@ python scripts/run_experiment.py --name prep --prebuild-envs \
 
 ```bash
 python -m venv .venv && .venv/bin/pip install pyyaml pyarrow numpy networkx pytest
-PYTHONPATH=. .venv/bin/pytest tests/ -q                                   # 21 tests
+PYTHONPATH=. .venv/bin/python -m pytest tests/ -q
 .venv/bin/python scripts/submission_harness.py --dry-run --task-id fastapi_15589
 ```
 

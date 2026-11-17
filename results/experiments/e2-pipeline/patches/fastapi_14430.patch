@@ -1,0 +1,15 @@
+diff --git a/read_file.py b/read_file.py
+new file mode 100644
+index 00000000..2cea6a77
+--- /dev/null
++++ b/read_file.py
+@@ -0,0 +1,9 @@
++import sys
++if __name__ == "__main__":
++    filepath = sys.argv[1]
++    start_line = int(sys.argv[2])
++    end_line = int(sys.argv[3])
++    with open(filepath, 'r') as f:
++        lines = f.readlines()
++        for i in range(start_line - 1, min(end_line, len(lines))):
++            print(lines[i], end='')

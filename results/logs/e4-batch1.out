@@ -1,0 +1,80 @@
+##### e4-two-step
+[1/30] fastapi_14262  -> patch_breaks_import  turns=22 calls=22 patch=332B 118.8s peak_prompt=11107 end=tool-call_budget_exhausted
+[2/30] fastapi_11194  -> no_edit_attempted  turns=22 calls=22 patch=0B 147.1s peak_prompt=11912 end=tool-call_budget_exhausted
+[3/30] fastapi_14258  -> no_edit_attempted  turns=23 calls=22 patch=0B 169.8s peak_prompt=13638 end=tool-call_budget_exhausted
+[4/30] fastapi_13786  -> no_edit_attempted  turns=23 calls=22 patch=0B 176.8s peak_prompt=11842 end=tool-call_budget_exhausted
+[5/30] fastapi_14186  -> no_edit_attempted  turns=21 calls=19 patch=0B 182.6s peak_prompt=13041 end=time_budget_exhausted
+[6/30] fastapi_14301  -> RESOLVED  turns=23 calls=22 patch=710B 77.1s peak_prompt=7634 end=tool-call_budget_exhausted
+[7/30] fastapi_14372  -> no_edit_attempted  turns=23 calls=22 patch=0B 72.0s peak_prompt=8168 end=tool-call_budget_exhausted
+[8/30] fastapi_14306  -> no_edit_attempted  turns=23 calls=22 patch=0B 129.6s peak_prompt=14193 end=tool-call_budget_exhausted
+[9/30] fastapi_14303  -> RESOLVED  turns=21 calls=18 patch=745B 219.8s peak_prompt=16295 end=time_budget_exhausted
+[10/30] fastapi_14360  -> no_edit_attempted  turns=23 calls=21 patch=0B 209.7s peak_prompt=9569 end=time_budget_exhausted
+[11/30] fastapi_14430  -> no_edit_attempted  turns=23 calls=21 patch=0B 183.8s peak_prompt=10762 end=time_budget_exhausted
+[12/30] fastapi_14609  -> tests_failed  turns=22 calls=22 patch=489B 106.8s peak_prompt=15818 end=tool-call_budget_exhausted
+E       assert 'Validation errors:' in '1 validation error:\n  {\'type\': \'int_parsing\', \'loc\': (\'path\', \'item_id\'), \'msg\': \'Input should be a val...api_14487_o82m1eq3/workspace/docs_src/handling_errors/tutorial004.py", line 19, in read_item\n    GET /items/{item_id}'
+E        +  where '1 validation error:\n  {\'type\': \'int_parsing\', \'loc\': (\'path\', \'item_id\'), \'msg\': \'Input should be a val...api_14487_o82m1eq3/workspace/docs_src/handling_errors/tutorial004.py", line 19, in read_item\n    GET /items/{item_id}' = <Response [400 Bad Request]>.text
+[13/30] fastapi_14487  -> tests_failed  turns=23 calls=22 patch=1466B 158.9s peak_prompt=9336 end=tool-call_budget_exhausted
+[14/30] fastapi_9753  -> no_edit_attempted  turns=23 calls=22 patch=0B 116.1s peak_prompt=6995 end=tool-call_budget_exhausted
+[15/30] fastapi_15280  -> no_edit_attempted  turns=22 calls=21 patch=0B 190.5s peak_prompt=10736 end=time_budget_exhausted
+[16/30] requests_7315  -> RESOLVED  turns=20 calls=18 patch=522B 174.9s peak_prompt=9005 end=submit_patch
+[17/30] requests_7309  -> RESOLVED  turns=18 calls=15 patch=692B 193.2s peak_prompt=10284 end=time_budget_exhausted
+[18/30] fastapi_9555  -> RESOLVED  turns=24 calls=21 patch=1688B 218.6s peak_prompt=11972 end=time_budget_exhausted
+[19/30] rich_3052  -> no_edit_attempted  turns=22 calls=22 patch=0B 52.2s peak_prompt=5667 end=tool-call_budget_exhausted
+[20/30] requests_7502  -> no_edit_attempted  turns=22 calls=19 patch=0B 190.6s peak_prompt=10877 end=time_budget_exhausted
+[21/30] rich_2943  -> no_edit_attempted  turns=22 calls=22 patch=0B 142.3s peak_prompt=14365 end=tool-call_budget_exhausted
+[22/30] rich_2725  -> no_edit_attempted  turns=22 calls=18 patch=0B 183.6s peak_prompt=12493 end=time_budget_exhausted
+[23/30] rich_3063  -> tests_failed  turns=22 calls=22 patch=517B 147.9s peak_prompt=15392 end=tool-call_budget_exhausted
+[24/30] rich_3105  -> no_edit_attempted  turns=19 calls=16 patch=0B 201.4s peak_prompt=15524 end=time_budget_exhausted
+[25/30] rich_3486  -> no_edit_attempted  turns=24 calls=21 patch=0B 182.5s peak_prompt=14577 end=time_budget_exhausted
+[26/30] rich_3894  -> tests_failed  turns=23 calls=22 patch=746B 171.9s peak_prompt=11486 end=tool-call_budget_exhausted
+        with contextlib.ExitStack() as stack:
+[27/30] rich_4070  -> tests_failed  turns=16 calls=14 patch=841B 182.4s peak_prompt=12897 end=time_budget_exhausted
+[28/30] rich_3930  -> no_edit_attempted  turns=22 calls=20 patch=0B 215.1s peak_prompt=17255 end=time_budget_exhausted
+[29/30] rich_4076  -> no_edit_attempted  turns=25 calls=21 patch=0B 180.2s peak_prompt=13112 end=time_budget_exhausted
+[30/30] rich_4077  -> no_edit_attempted  turns=25 calls=21 patch=0B 180.6s peak_prompt=10105 end=time_budget_exhausted
+  resolution rate : 0.167  (5/30)
+  failure buckets : {'no_edit_attempted': 19, 'patch_breaks_import': 1, 'resolved': 5, 'tests_failed': 5}
+  end reasons     : {'tool-call_budget_exhausted': 14, 'time_budget_exhausted': 15, 'submit_patch': 1}
+  medians         : turns=22.0 calls=21.0 secs=178.5 first_edit_turn=12
+  failing commands: {'grep -n': 8, 'grep -rn': 7, 'python3 -m': 3, 'grep -r': 2, 'read_file fastapi/routing.py': 1, 'ls tests/dependencies/test_utils.py': 1, 'submit_patch': 1, 'ls tests': 1, 'ls tests/test_dependency_types.py': 1, 'read_file -f': 1, 'python3 -c': 1, 'grep': 1}
+  context         : median peak prompt=11877.0 tok  max=17255 tok  compactions=6
+  time per task   : mean=162.6s p90=209.7s max=219.8s  (API wall clock - NOT a Gemma estimate)
+##### e4-pipeline-calls30
+[1/30] fastapi_14262  -> no_edit_attempted  turns=30 calls=30 patch=0B 110.0s peak_prompt=13417 end=tool-call_budget_exhausted
+[2/30] fastapi_11194  -> no_edit_attempted  turns=31 calls=30 patch=0B 118.0s peak_prompt=14704 end=tool-call_budget_exhausted
+[3/30] fastapi_14258  -> no_edit_attempted  turns=31 calls=30 patch=0B 184.9s peak_prompt=13405 end=tool-call_budget_exhausted
+[4/30] fastapi_13786  -> tests_failed  turns=32 calls=30 patch=554B 225.4s peak_prompt=13731 end=tool-call_budget_exhausted
+[5/30] fastapi_14301  -> RESOLVED  turns=32 calls=29 patch=647B 206.7s peak_prompt=10035 end=submit_patch
+[6/30] fastapi_14306  -> no_edit_attempted  turns=30 calls=30 patch=0B 141.1s peak_prompt=13292 end=tool-call_budget_exhausted
+[7/30] fastapi_14186  -> patch_breaks_import  turns=34 calls=30 patch=617B 339.5s peak_prompt=10423 end=tool-call_budget_exhausted
+[8/30] fastapi_14303  -> RESOLVED  turns=35 calls=30 patch=745B 308.4s peak_prompt=9498 end=tool-call_budget_exhausted
+[9/30] fastapi_14487  -> no_edit_attempted  turns=30 calls=30 patch=0B 136.8s peak_prompt=15266 end=tool-call_budget_exhausted
+[10/30] fastapi_14372  -> no_edit_attempted  turns=31 calls=30 patch=0B 169.5s peak_prompt=6336 end=tool-call_budget_exhausted
+[11/30] fastapi_14430  -> no_edit_attempted  turns=31 calls=30 patch=0B 168.0s peak_prompt=13240 end=tool-call_budget_exhausted
+[12/30] fastapi_15280  -> no_edit_attempted  turns=30 calls=30 patch=0B 109.0s peak_prompt=12896 end=tool-call_budget_exhausted
+[13/30] fastapi_14609  -> tests_failed  turns=32 calls=30 patch=489B 185.9s peak_prompt=15578 end=tool-call_budget_exhausted
+[14/30] fastapi_14360  -> tests_failed  turns=36 calls=29 patch=777B 430.2s peak_prompt=11984 end=max_turns
+[15/30] requests_7315  -> RESOLVED  turns=32 calls=30 patch=522B 179.7s peak_prompt=10953 end=tool-call_budget_exhausted
+[16/30] fastapi_9753  -> RESOLVED  turns=32 calls=30 patch=862B 302.4s peak_prompt=8791 end=tool-call_budget_exhausted
+[17/30] fastapi_9555  -> RESOLVED  turns=36 calls=29 patch=1688B 383.5s peak_prompt=14098 end=max_turns
+[18/30] requests_7502  -> no_edit_attempted  turns=31 calls=30 patch=0B 261.9s peak_prompt=7759 end=tool-call_budget_exhausted
+[19/30] rich_2943  -> RESOLVED  turns=32 calls=29 patch=400B 182.7s peak_prompt=12750 end=submit_patch
+[20/30] requests_7309  -> RESOLVED  turns=34 calls=30 patch=692B 406.1s peak_prompt=12840 end=tool-call_budget_exhausted
+[21/30] rich_3052  -> no_edit_attempted  turns=31 calls=30 patch=0B 216.3s peak_prompt=13343 end=tool-call_budget_exhausted
+[22/30] rich_3486  -> no_edit_attempted  turns=31 calls=30 patch=0B 117.5s peak_prompt=8701 end=tool-call_budget_exhausted
+[23/30] rich_3063  -> no_edit_attempted  turns=35 calls=30 patch=0B 240.0s peak_prompt=12369 end=tool-call_budget_exhausted
+[24/30] rich_3105  -> no_edit_attempted  turns=32 calls=30 patch=0B 245.5s peak_prompt=20841 end=tool-call_budget_exhausted
+[25/30] rich_3930  -> no_edit_attempted  turns=31 calls=30 patch=0B 124.7s peak_prompt=14043 end=tool-call_budget_exhausted
+[26/30] rich_2725  -> RESOLVED  turns=36 calls=26 patch=1099B 471.5s peak_prompt=13709 end=max_turns
+[27/30] rich_4076  -> tests_failed  turns=30 calls=27 patch=454B 74.1s peak_prompt=10888 end=submit_patch
+[28/30] rich_4077  -> RESOLVED  turns=21 calls=18 patch=353B 88.3s peak_prompt=10650 end=submit_patch
+        with contextlib.ExitStack() as stack:
+[29/30] rich_4070  -> tests_failed  turns=31 calls=30 patch=991B 197.8s peak_prompt=14078 end=tool-call_budget_exhausted
+[30/30] rich_3894  -> tests_failed  turns=36 calls=29 patch=1288B 281.7s peak_prompt=14937 end=max_turns
+  resolution rate : 0.300  (9/30)
+  failure buckets : {'no_edit_attempted': 14, 'tests_failed': 6, 'patch_breaks_import': 1, 'resolved': 9}
+  end reasons     : {'tool-call_budget_exhausted': 22, 'submit_patch': 4, 'max_turns': 4}
+  medians         : turns=31.5 calls=30.0 secs=191.9 first_edit_turn=23.0
+  failing commands: {'python3 -c': 16, 'grep -n': 15, 'sed -i': 8, 'grep -rn': 5, 'python3 -m': 4, 'read_file --start_line': 3, 'grep -r': 3, 'read_file rich/cells.py': 3, 'read_file -s': 1, 'read_file fastapi/security/api_key.py': 1, 'read_file{filepath:': 1, 'grep -nE': 1}
+  context         : median peak prompt=13068.0 tok  max=20841 tok  compactions=15
+  time per task   : mean=220.2s p90=383.5s max=471.5s  (API wall clock - NOT a Gemma estimate)

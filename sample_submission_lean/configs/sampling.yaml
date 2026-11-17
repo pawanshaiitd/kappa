@@ -1,0 +1,15 @@
+# Sampling for Gemma 4 under vLLM (max_model_len = 32768), shared by every agent.
+# temperature 1.0 / top_p 0.95 / top_k 64 is Google's recommended setting for Gemma. Measured on
+# real Gemma 4 12B (4 tasks): at temperature 0 the model repeats the same tool call until the
+# budget runs out; at 1.0 both variants resolved 3 of 4 instead of 1 and 0.
+# max_output_tokens bounds how far one generation can overrun the per-task time cap:
+# the time budget is only checked between tool calls.
+# include_thoughts false keeps reasoning out of the history, so the prompt stays small.
+temperature: 1.0
+top_p: 0.95
+top_k: 64
+max_output_tokens: 2048
+seed: 20261117
+thinking_config:
+  thinking_budget: 512
+  include_thoughts: false

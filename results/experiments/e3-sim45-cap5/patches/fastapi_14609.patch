@@ -1,0 +1,25 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index af2bed9a..eaee266d 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -39,7 +39,6 @@ from fastapi._compat import (
+     is_uploadfile_or_nonable_uploadfile_annotation,
+     is_uploadfile_sequence_annotation,
+     lenient_issubclass,
+-    may_v1,
+     sequence_types,
+     serialize_sequence_value,
+     value_is_sequence,
+@@ -391,7 +390,11 @@ def analyze_param(
+         fastapi_annotations = [
+             arg
+             for arg in annotated_args[1:]
+-            if isinstance(arg, (FieldInfo, may_v1.FieldInfo, params.Depends))
++        fastapi_annotations = [\n            arg\n            for arg in annotated_args[1:]\
++            if isinstance(arg, (FieldInfo, params.Depends))\
++        ]\
++        ],
++<|tool_call>call:edit_file{filepath:
+         ]
+         fastapi_specific_annotations = [
+             arg

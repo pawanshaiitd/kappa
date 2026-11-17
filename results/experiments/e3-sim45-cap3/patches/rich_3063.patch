@@ -1,0 +1,33 @@
+diff --git a/reproduce_issue.py b/reproduce_issue.py
+new file mode 100644
+index 00000000..67ec4e0f
+--- /dev/null
++++ b/reproduce_issue.py
+@@ -0,0 +1,27 @@
++import re
++from typing import Match, Callable
++
++_EscapeSubMethod = Callable[[Match[str]], str]
++
++def escape(
++    markup: str,
++    _escape: _EscapeSubMethod = re.compile(r"(\\\\*)(\\[[a-z#/@][^[]*?])").sub,
++) -> str:
++    def escape_backslashes(match: Match[str]) -> str:
++        backslashes, text = match.groups()
++        return f"{backslashes}{backslashes}\\{text}"
++
++    markup = _escape(escape_backslashes, markup)
++    return markup
++
++if __name__ == "__main__":
++    # Use raw strings for inputs
++    # r'foo\' is problematic in python because \' is escaped even in raw strings
++    # if it's at the end of a string.
++    # Use 'foo\\' instead of r'foo\'
++    print(f"Input:  {repr('foo\\')}")
++    print(f"Output: {repr(escape('foo\\'))}")
++    print(f"Input:  {repr('foo\[')}")
++    print(f"Output: {repr(escape('foo\['))}")
++    print(f"Input:  {repr('foo\\\\')}")
++    print(f"Output: {repr(escape('foo\\\\'))}")

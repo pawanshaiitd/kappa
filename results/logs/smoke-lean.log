@@ -1,0 +1,35 @@
+[1mexperiment:[0m smoke-lean   [1mvariant:[0m baseline
+[1mmodel:[0m google/gemma-4-12B-it-qat-w4a16-ct via openai   [1mtasks:[0m 4 of 4   [1mclock:[0m wall
+[1mendpoint:[0m http://10.120.0.183:8000/v1
+
+[93mtool-call budget exhausted - ending session.[0m
+[1/4] requests_7309  -> [91mno_edit_attempted[0m  turns=22 calls=22 patch=0B 20.8s peak_prompt=6163 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[2/4] fastapi_14301  -> [91mno_edit_attempted[0m  turns=22 calls=22 patch=0B 23.4s peak_prompt=5266 end=tool-call_budget_exhausted
+
+[93m[nudge 1/3][0m Your previous response reached the token limit while thinking before a tool call was compl...
+
+[93m[nudge 1/3][0m Your previous response reached the token limit while thinking before a tool call was compl...
+
+[93mtool-call budget exhausted - ending session.[0m
+[3/4] fastapi_9555  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 54.3s peak_prompt=10305 end=tool-call_budget_exhausted
+
+[93mtool-call budget exhausted - ending session.[0m
+[4/4] rich_4077  -> [91mno_edit_attempted[0m  turns=23 calls=22 patch=0B 62.4s peak_prompt=8861 end=tool-call_budget_exhausted
+
+========================================================================
+[1m  smoke-lean[0m   variant: baseline
+========================================================================
+  resolution rate : [91m0.000[0m  (0/4)
+  failure buckets : {'no_edit_attempted': 4}
+  end reasons     : {'tool-call_budget_exhausted': 4}
+  medians         : turns=22.5 calls=22.0 secs=38.8 first_edit_turn=None
+  empty patches   : 4   explicit submits: 0
+  tool errors     : {'run_command:CommandError': 11}
+  failing commands: {'read_file src/requests/utils.py': 5, 'grep -n': 2, 'sed -i': 1, 'read_file fastapi/dependencies/utils.py': 1, 'read_file --filepath': 1, 'read_file rich/file_proxy.py': 1}
+  context         : median peak prompt=7512.0 tok  max=10305 tok  compactions=0
+  phase swe_agent   : llm_calls=22.5  tool_calls=22  prompt_tokens=121356  output_tokens=2277.5
+  time per task   : mean=40.2s p90=62.4s max=62.4s  (API wall clock - NOT a Gemma estimate)
+
+Artifacts: /Users/pawankumar.s/Documents/kappa/results/experiments/smoke-lean

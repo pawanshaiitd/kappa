@@ -1,0 +1,11 @@
+# Sampling for Gemma 4 served by vLLM (max_model_len = 32768).
+# max_output_tokens is deliberately modest: a long thought block followed by a large
+# edit_file call is the main cause of truncated <|tool_call> tags, which wastes a turn.
+temperature: 0.1
+top_p: 0.95
+top_k: 64
+max_output_tokens: 6144
+seed: 20261113
+thinking_config:
+  thinking_budget: 2048
+  include_thoughts: true

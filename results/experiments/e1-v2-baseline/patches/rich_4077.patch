@@ -1,0 +1,16 @@
+diff --git a/rich/console.py b/rich/console.py
+index 0bdce769..a4dc2cf7 100644
+--- a/rich/console.py
++++ b/rich/console.py
+@@ -969,9 +969,10 @@ class Console:
+         isatty: Optional[Callable[[], bool]] = getattr(self.file, "isatty", None)
+         try:
+             return False if isatty is None else isatty()
+-        except ValueError:
++        except (ValueError, OSError):
+             # in some situation (at the end of a pytest run for example) isatty() can raise
+             # ValueError: I/O operation on closed file
++            # OSError: I/O operation on closed file
+             # return False because we aren't in a terminal anymore
+             return False
+ 

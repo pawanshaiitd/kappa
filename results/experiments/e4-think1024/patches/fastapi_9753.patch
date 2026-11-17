@@ -1,0 +1,19 @@
+diff --git a/fastapi/dependencies/utils.py b/fastapi/dependencies/utils.py
+index 1a493a9f..fd423578 100644
+--- a/fastapi/dependencies/utils.py
++++ b/fastapi/dependencies/utils.py
+@@ -1,4 +1,5 @@
+ import dataclasses
++import functools
+ import inspect
+ from contextlib import AsyncExitStack, contextmanager
+ from copy import copy, deepcopy
+@@ -193,6 +194,8 @@ def get_flat_params(dependant: Dependant) -> List[ModelField]:
+ def get_typed_signature(call: Callable[..., Any]) -> inspect.Signature:
+     signature = inspect.signature(call)
+     unwrapped = inspect.unwrap(call)
++    while hasattr(unwrapped, "func") and isinstance(unwrapped.func, functools.partial):
++        unwrapped = unwrapped.func
+     globalns = getattr(unwrapped, "__globals__", {})
+     typed_params = [
+         inspect.Parameter(

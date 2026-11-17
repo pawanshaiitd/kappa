@@ -1,0 +1,30 @@
+diff --git a/reproduce_issue.py b/reproduce_issue.py
+new file mode 100644
+index 00000000..ce4ed5f4
+--- /dev/null
++++ b/reproduce_issue.py
+@@ -0,0 +1,24 @@
++import re
++
++RE_TAGS = re.compile(
++    r"""((\\\\*)(\\[[a-z#/@][^[]*?])))""",
++    re.VERBOSE,
++)
++
++def escape(markup: str) -> str:
++    def escape_backslashes(match):
++        backslashes, text = match.groups()
++        return f"{backslashes}{backslashes}\\{text}"
++
++    markup = RE_TAGS.sub(escape_backslashes, markup)
++    return markup
++
++test_cases = [
++    ("test\\", "test\\\\"),        # Trailing backslash
++    ("test\\\\", "test\\\\\\\\"),  # Escaped backslash
++    ("test\\x", "test\\\\x"),      # Escaped x
++]
++
++for input_str, expected in test_cases:
++    result = escape(input_str)
++    print(f"Input: {input_str!r} -> Output: {result!r} (Expected: {expected!r})")

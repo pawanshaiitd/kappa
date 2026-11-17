@@ -20,7 +20,7 @@ from scripts.harness_tools import (
 
 
 def build_system_prompt() -> str:
-    prompt_path = Path("sample_submission/prompts/system.md")
+    prompt_path = Path("archive/submission_v2/prompts/system.md")
     if prompt_path.exists():
         return prompt_path.read_text(encoding="utf-8")
     return "You are an expert autonomous software engineer."
